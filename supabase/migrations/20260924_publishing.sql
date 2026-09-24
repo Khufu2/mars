@@ -1,6 +1,6 @@
 -- MARS publishing layer: run after 20260922_init.sql
 
-create table if not exists public.profiles (
+alter table public.authors add column if not exists user_id uuid references auth.users(id) on delete set null;\ncreate unique index if not exists authors_user_id_idx on public.authors(user_id) where user_id is not null;\n\ncreate table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   display_name text,
   role text not null default 'author' check (role in ('admin','editor','author')),
@@ -130,3 +130,81 @@ create policy "authenticated manage campaigns" on public.ad_campaigns for all to
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values ('article-media','article-media',true,10485760,array['image/jpeg','image/png','image/webp','image/avif'])
 on conflict (id) do update set public = true;
+
+
+-- Tighten the broad starter policies now that roles exist.
+drop policy if exists "authenticated manage articles" on public.articles;
+drop policy if exists "authenticated manage authors" on public.authors;
+drop policy if exists "authenticated manage sources" on public.sources;
+drop policy if exists "authenticated manage article sources" on public.article_sources;
+drop policy if exists "authenticated manage social queue" on public.social_queue;
+
+create policy "newsroom read own or elevated articles" on public.articles
+for select to authenticated using (
+  created_by = auth.uid()
+  or exists (select 1 from public.profiles p where p.id = auth.uid() and p.role in ('admin','editor'))
+  or status = 'published'
+);
+
+create policy "newsroom create own articles" on public.articles
+for insert to authenticated with check (
+  created_by = auth.uid()
+  and exists (select 1 from public.profiles p where p.id = auth.uid() and p.role in ('admin','editor','author'))
+);
+
+create policy "newsroom update own or elevated articles" on public.articles
+for update to authenticated using (
+  created_by = auth.uid()
+  or exists (select 1 from public.profiles p where p.id = auth.uid() and p.role in ('admin','editor'))
+) with check (
+  created_by = auth.uid()
+  or exists (select 1 from public.profiles p where p.id = auth.uid() and p.role in ('admin','editor'))
+);
+
+create policy "newsroom delete own or elevated articles" on public.articles
+for delete to authenticated using (
+  created_by = auth.uid()
+  or exists (select 1 from public.profiles p where p.id = auth.uid() and p.role in ('admin','editor'))
+);
+
+create policy "newsroom manage authors" on public.authors
+for all to authenticated using (
+  user_id = auth.uid()
+  or exists (select 1 from public.profiles p where p.id = auth.uid() and p.role in ('admin','editor'))
+) with check (
+  user_id = auth.uid()
+  or exists (select 1 from public.profiles p where p.id = auth.uid() and p.role in ('admin','editor'))
+);
+
+create policy "newsroom manage sources" on public.sources
+for all to authenticated using (
+  exists (select 1 from public.profiles p where p.id = auth.uid() and p.role in ('admin','editor','author'))
+) with check (
+  exists (select 1 from public.profiles p where p.id = auth.uid() and p.role in ('admin','editor','author'))
+);
+
+create policy "newsroom manage article sources" on public.article_sources
+for all to authenticated using (
+  exists (
+    select 1 from public.articles a
+    where a.id = article_id
+      and (a.created_by = auth.uid() or exists (
+        select 1 from public.profiles p where p.id = auth.uid() and p.role in ('admin','editor')
+      ))
+  )
+) with check (
+  exists (
+    select 1 from public.articles a
+    where a.id = article_id
+      and (a.created_by = auth.uid() or exists (
+        select 1 from public.profiles p where p.id = auth.uid() and p.role in ('admin','editor')
+      ))
+  )
+);
+
+create policy "editors manage social queue" on public.social_queue
+for all to authenticated using (
+  exists (select 1 from public.profiles p where p.id = auth.uid() and p.role in ('admin','editor'))
+) with check (
+  exists (select 1 from public.profiles p where p.id = auth.uid() and p.role in ('admin','editor'))
+);

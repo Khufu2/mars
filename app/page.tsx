@@ -1,98 +1,151 @@
 import Link from "next/link";
 import { articles, marketRows } from "@/lib/data";
-import { StoryCard } from "@/components/StoryCard";
 import { NewsletterForm } from "@/components/NewsletterForm";
 
-export default function Home() {
-  const [lead, ...rest] = articles;
+function MiniStory({ index }: { index: number }) {
+  const story = articles[index];
   return (
-    <main>
-      <section className="heroShell">
-        <div className="heroKicker">MARS / INTELLIGENCE</div>
-        <div className="heroGrid">
-          <article className={"leadStory accent-" + lead.accent}>
-            <div className="storyMeta"><span>{lead.section}</span><span>{lead.region}</span></div>
-            <Link href={"/article/" + lead.slug}><h1>{lead.title}</h1></Link>
-            <p className="leadDek">{lead.dek}</p>
-            <div className="byline">{lead.author} · {lead.publishedAt}</div>
-          </article>
-          <Link className="heroImagePanel" href={"/article/" + lead.slug}>
-            <img src={lead.image} alt="" />
-            <span>{lead.imageCredit}</span>
-          </Link>
-          <div className="heroSide">
-            <StoryCard story={rest[0]} compact />
-            <StoryCard story={rest[1]} compact />
-          </div>
+    <article className={"miniStory accentLine-" + story.accent}>
+      <div className="storyLabel">{story.section}</div>
+      <Link href={"/article/" + story.slug}><h3>{story.title}</h3></Link>
+      <p>{story.dek}</p>
+      <div className="creditLine">{story.author}</div>
+    </article>
+  );
+}
+
+export default function Home() {
+  const lead = articles[0];
+
+  return (
+    <main className="semaHome">
+      <section className="topStories">
+        <article className="heroLead">
+          <div className="storyLabel">{lead.section}</div>
+          <Link href={"/article/" + lead.slug}><h1>{lead.title}</h1></Link>
+          <p className="heroStandfirst">{lead.dek}</p>
+          <div className="creditLine">{lead.author} · {lead.publishedAt}</div>
+        </article>
+
+        <Link className="heroPhoto" href={"/article/" + lead.slug}>
+          <img src={lead.image} alt="" />
+          <span>{lead.imageCredit}</span>
+        </Link>
+
+        <div className="topRail">
+          <MiniStory index={1} />
+          <MiniStory index={2} />
         </div>
       </section>
 
-      <section className="glance">
-        <div className="sectionTitleRow">
-          <h2>Africa at a glance</h2>
-          <span>Signals worth watching now</span>
+      <section className="viewBand">
+        <div className="viewItem">
+          <span>View /</span>
+          <Link href={"/article/" + articles[3].slug}>{articles[3].title}</Link>
+          <small>{articles[3].author}</small>
         </div>
-        <div className="glanceGrid">
-          <div className="glanceMap" aria-hidden="true">
-            <div className="africaShape">AFRICA<span className="pulse p1" /><span className="pulse p2" /><span className="pulse p3" /></div>
+        <div className="viewItem">
+          <span>Signal /</span>
+          <Link href={"/article/" + articles[4].slug}>{articles[4].title}</Link>
+          <small>{articles[4].author}</small>
+        </div>
+      </section>
+
+      <section className="glanceModule">
+        <div className="moduleHeading">
+          <h2>Africa at a Glance</h2>
+          <span>Updated for the prototype newsroom</span>
+        </div>
+        <div className="glanceBody">
+          <div className="africaPanel">
+            <div className="continentWord">AFRICA</div>
+            <i className="mapDot dot1" />
+            <i className="mapDot dot2" />
+            <i className="mapDot dot3" />
+            <i className="mapDot dot4" />
           </div>
-          <ol className="glanceList">
-            <li><span>1</span><p><strong>Tanzania</strong> Export economics increasingly hinge on inland logistics and quality aggregation.</p></li>
-            <li><span>2</span><p><strong>East Africa</strong> Climate anomalies matter most when layered against crop calendars.</p></li>
-            <li><span>3</span><p><strong>Regional trade</strong> Policy notices can reprice reachable demand overnight.</p></li>
-            <li><span>4</span><p><strong>Input markets</strong> Financing conditions can be as important as physical fertilizer supply.</p></li>
+          <ol className="glanceItems">
+            <li><span>1</span><p><strong>Tanzania:</strong> logistics and quality aggregation increasingly determine export economics.</p></li>
+            <li><span>2</span><p><strong>East Africa:</strong> rainfall becomes commercially useful when tied to crop calendars and procurement.</p></li>
+            <li><span>3</span><p><strong>Regional trade:</strong> policy notices can change reachable demand before price charts catch up.</p></li>
+            <li><span>4</span><p><strong>Input markets:</strong> credit, currency and dealer liquidity shape whether supply reaches farms.</p></li>
+            <li><span>5</span><p><strong>Ports:</strong> food trade needs corridor intelligence, not just harvest reporting.</p></li>
+            <li><span>6</span><p><strong>Markets:</strong> MARS is being built to connect price, freight, climate and verified events.</p></li>
           </ol>
         </div>
       </section>
 
-      <section className="newsGridSection">
-        <div className="sectionTitleRow"><h2>Latest intelligence</h2><Link href="/search">Search all →</Link></div>
-        <div className="storyGrid">
-          {rest.slice(2).map(story => <StoryCard story={story} key={story.slug} />)}
-        </div>
-      </section>
-
-      <section className="marketDesk">
-        <div>
-          <div className="eyebrowBlock">MARKET DESK</div>
-          <h2>Price is only half the story.</h2>
-          <p>MARS is designed to put commodity prices beside freight, weather, policy and verified trade events.</p>
-          <Link className="textArrow" href="/section/markets">Open markets →</Link>
-        </div>
-        <div className="marketTable">
-          <div className="marketTableHead"><span>Instrument</span><span>Last</span><span>Move</span></div>
-          {marketRows.map(row => <div className="marketTableRow" key={row.name}>
-            <strong>{row.name}</strong><span>{row.value}</span><em className={row.direction === "up" ? "positive" : "negative"}>{row.move}</em>
-          </div>)}
-          <small>Illustrative prototype data — not trading advice.</small>
-        </div>
-      </section>
-
-      <section className="climateBand">
-        <div className="climateCopy">
-          <div className="eyebrowBlock">CLIMATE SIGNAL</div>
-          <h2>Weather becomes useful when it meets a crop calendar.</h2>
-          <p>The production data layer will connect rainfall anomalies, planting stages and market exposure instead of publishing generic forecasts.</p>
-          <Link className="pillLink" href="/section/climate">Explore climate</Link>
-        </div>
-        <div className="climateGraphic" aria-label="Decorative climate anomaly visualization">
-          {[34,68,45,88,55,72,41,91,63,52,78,47].map((h,i)=><i key={i} style={{height: h + "%"}} />)}
-        </div>
-      </section>
-
-      <section className="grainxBand">
-        <div><span className="miniLabel">ACTION LAYER</span><h2>Intelligence → opportunity.</h2></div>
-        <p>When a story reveals real buying or selling intent, readers can move from analysis into Grain X without turning the newsroom into an ad.</p>
-        <a className="grainxButton" href="https://grainx.xyz" target="_blank" rel="noreferrer">Open Grain X ↗</a>
-      </section>
-
-      <section className="briefing" id="brief">
-        <div className="briefingCopy">
-          <span className="miniLabel">THE MARS BRIEF</span>
-          <h2>The African food economy before your first meeting.</h2>
-          <p>Markets, climate, trade, logistics and the one chart that matters. Built for operators, exporters, investors and policy teams.</p>
+      <section className="briefStrip" id="brief">
+        <div className="briefStripCopy">
+          <span className="storyLabel">THE MARS BRIEF</span>
+          <h2>Africa&apos;s food economy before your first meeting.</h2>
+          <p>A concise morning briefing for operators, exporters, investors, policy teams and anyone moving food across the continent.</p>
         </div>
         <NewsletterForm />
+      </section>
+
+      <section className="deskSection">
+        <div className="deskHeader"><Link href="/section/markets">Markets</Link><span>Price, demand and the forces moving both.</span></div>
+        <div className="deskGrid">
+          <MiniStory index={5} />
+          <div className="marketBoard">
+            <div className="marketBoardHead"><span>Market Board</span><small>Prototype data</small></div>
+            {marketRows.map(row => (
+              <div className="marketBoardRow" key={row.name}>
+                <strong>{row.name}</strong>
+                <span>{row.value}</span>
+                <em className={row.direction === "up" ? "positive" : "negative"}>{row.move}</em>
+              </div>
+            ))}
+          </div>
+          <div className="deskNote">
+            <span className="storyLabel">WHY MARS</span>
+            <h3>Price is only half the story.</h3>
+            <p>Commodity intelligence becomes more useful when freight, rainfall, rules and counterparties sit next to the price.</p>
+            <Link href="/section/markets">Open Markets →</Link>
+          </div>
+        </div>
+      </section>
+
+      <section className="deskSection">
+        <div className="deskHeader"><Link href="/section/climate">Climate</Link><span>Weather as a market input.</span></div>
+        <div className="featureGrid">
+          <article className="featureStory">
+            <img src={articles[1].image} alt="" />
+            <div className="storyLabel">{articles[1].section}</div>
+            <Link href={"/article/" + articles[1].slug}><h2>{articles[1].title}</h2></Link>
+            <p>{articles[1].dek}</p>
+          </article>
+          <article className="colorPanel colorPanelBlue">
+            <span className="storyLabel">CLIMATE SIGNAL</span>
+            <h2>Local crop context beats generic weather alerts.</h2>
+            <p>MARS will connect rainfall anomalies with planting stages, road access and market exposure.</p>
+            <Link href="/section/climate">Explore Climate →</Link>
+          </article>
+        </div>
+      </section>
+
+      <section className="deskSection">
+        <div className="deskHeader"><Link href="/section/trade">Trade & Logistics</Link><span>Where opportunity meets movement.</span></div>
+        <div className="threeUp">
+          {[2,4,0].map(index => {
+            const story = articles[index];
+            return (
+              <article className={"feedCard accentLine-" + story.accent} key={story.slug}>
+                <img src={story.image} alt="" />
+                <div className="storyLabel">{story.section}</div>
+                <Link href={"/article/" + story.slug}><h3>{story.title}</h3></Link>
+                <p>{story.dek}</p>
+              </article>
+            );
+          })}
+        </div>
+      </section>
+
+      <section className="grainxCallout">
+        <div><span className="storyLabel">FROM INTELLIGENCE TO ACTION</span><h2>See demand. Find supply. Move.</h2></div>
+        <p>MARS stays useful as an editorial product on its own. When a story reveals real commercial intent, Grain X becomes the action layer.</p>
+        <a href="https://grainx.xyz" target="_blank" rel="noreferrer">Open Grain X ↗</a>
       </section>
     </main>
   );

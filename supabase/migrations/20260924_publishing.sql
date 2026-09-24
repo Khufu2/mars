@@ -37,6 +37,10 @@ alter table public.articles add column if not exists reviewed_at timestamptz;
 alter table public.article_sources add column if not exists verified boolean not null default false;
 alter table public.article_sources add column if not exists accessed_at timestamptz not null default now();
 
+alter table public.newsletter_subscribers add column if not exists source text;
+alter table public.newsletter_subscribers add column if not exists consented_at timestamptz;
+alter table public.newsletter_subscribers add column if not exists last_subscribed_at timestamptz;
+
 do $$
 begin
   alter table public.articles drop constraint if exists articles_status_check;
@@ -207,4 +211,68 @@ for all to authenticated using (
   exists (select 1 from public.profiles p where p.id = auth.uid() and p.role in ('admin','editor'))
 ) with check (
   exists (select 1 from public.profiles p where p.id = auth.uid() and p.role in ('admin','editor'))
+);
+
+
+-- Production hardening for newsroom-adjacent tables.
+drop policy if exists "authenticated manage revisions" on public.article_revisions;
+drop policy if exists "authenticated manage corrections" on public.corrections;
+drop policy if exists "authenticated manage newsletter queue" on public.newsletter_queue;
+drop policy if exists "authenticated manage publication events" on public.publication_events;
+drop policy if exists "authenticated manage campaigns" on public.ad_campaigns;
+
+create policy "newsroom read revisions" on public.article_revisions
+for select to authenticated using (
+  exists (
+    select 1 from public.articles a
+    where a.id = article_id
+      and (a.created_by = auth.uid() or exists (
+        select 1 from public.profiles p where p.id = auth.uid() and p.role in ('admin','editor')
+      ))
+  )
+);
+
+create policy "newsroom create revisions" on public.article_revisions
+for insert to authenticated with check (
+  created_by = auth.uid()
+  and exists (
+    select 1 from public.articles a
+    where a.id = article_id
+      and (a.created_by = auth.uid() or exists (
+        select 1 from public.profiles p where p.id = auth.uid() and p.role in ('admin','editor')
+      ))
+  )
+);
+
+create policy "editors manage corrections" on public.corrections
+for all to authenticated using (
+  exists (select 1 from public.profiles p where p.id = auth.uid() and p.role in ('admin','editor'))
+) with check (
+  exists (select 1 from public.profiles p where p.id = auth.uid() and p.role in ('admin','editor'))
+);
+
+create policy "editors manage newsletter queue" on public.newsletter_queue
+for all to authenticated using (
+  exists (select 1 from public.profiles p where p.id = auth.uid() and p.role in ('admin','editor'))
+) with check (
+  exists (select 1 from public.profiles p where p.id = auth.uid() and p.role in ('admin','editor'))
+);
+
+create policy "editors read publication events" on public.publication_events
+for select to authenticated using (
+  exists (select 1 from public.profiles p where p.id = auth.uid() and p.role in ('admin','editor'))
+);
+
+create policy "editors manage campaigns" on public.ad_campaigns
+for all to authenticated using (
+  exists (select 1 from public.profiles p where p.id = auth.uid() and p.role in ('admin','editor'))
+) with check (
+  exists (select 1 from public.profiles p where p.id = auth.uid() and p.role in ('admin','editor'))
+);
+
+drop policy if exists "profiles read self" on public.profiles;
+create policy "profiles read newsroom" on public.profiles
+for select to authenticated using (
+  id = auth.uid()
+  or exists (select 1 from public.profiles p where p.id = auth.uid() and p.role in ('admin','editor'))
 );

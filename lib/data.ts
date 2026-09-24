@@ -140,4 +140,4 @@ export const marketRows = [
   { name: "Freight · DAR", value: "Demo index 104", move: "+3", direction: "up" }
 ];
 
-export const sections = ["Markets", "Climate", "Trade", "Logistics", "Policy", "Finance"];
+export const sections = ["Markets", "Climate", "Trade", "Logistics", "Policy", "Finance", "Companies", "Technology"];

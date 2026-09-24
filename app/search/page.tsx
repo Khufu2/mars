@@ -1,11 +1,11 @@
-import { articles } from "@/lib/data";
+import { searchPublishedArticles } from "@/lib/content";
 import { StoryCard } from "@/components/StoryCard";
 
-export default function SearchPage({ searchParams }: { searchParams?: { q?: string } }) {
-  const query = (searchParams?.q || "").trim().toLowerCase();
-  const results = query ? articles.filter(article =>
-    [article.title, article.dek, article.section, article.region, article.country, article.commodity || ""].join(" ").toLowerCase().includes(query)
-  ) : articles;
+export const revalidate = 60;
+
+export default async function SearchPage({ searchParams }: { searchParams?: { q?: string } }) {
+  const query = (searchParams?.q || "").trim();
+  const results = await searchPublishedArticles(query);
 
   return (
     <main className="searchPage">
@@ -14,7 +14,7 @@ export default function SearchPage({ searchParams }: { searchParams?: { q?: stri
         <input name="q" defaultValue={searchParams?.q || ""} placeholder="Search commodity, country, port, policy…" />
         <button>Search</button>
       </form>
-      <p className="resultCount">{query ? results.length + " result(s) for “" + searchParams?.q + "”" : "Showing prototype stories"}</p>
+      <p className="resultCount">{query ? results.length + " result(s) for “" + query + "”" : "Showing recent MARS intelligence"}</p>
       <div className="storyGrid">{results.map(story => <StoryCard story={story} key={story.slug} />)}</div>
     </main>
   );

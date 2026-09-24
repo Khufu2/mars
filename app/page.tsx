@@ -1,27 +1,30 @@
 import Link from "next/link";
-import { articles, marketRows } from "@/lib/data";
+import { marketRows } from "@/lib/data";
+import { getHomepageArticles, type PublishedArticle } from "@/lib/content";
 import { NewsletterForm } from "@/components/NewsletterForm";
 
-function MiniStory({ index }: { index: number }) {
-  const story = articles[index];
+function MiniStory({ story }: { story: PublishedArticle }) {
   return (
     <article className={"miniStory accentLine-" + story.accent}>
       <div className="storyLabel">{story.section}</div>
       <Link href={"/article/" + story.slug}><h3>{story.title}</h3></Link>
       <p>{story.dek}</p>
-      <div className="creditLine">{story.author}</div>
+      <div className="creditLine">{story.author}{story.isPrototype ? " · Prototype" : ""}</div>
     </article>
   );
 }
 
-export default function Home() {
+export const revalidate = 60;
+
+export default async function Home() {
+  const articles = await getHomepageArticles(6);
   const lead = articles[0];
 
   return (
     <main className="semaHome">
       <section className="topStories">
         <article className="heroLead">
-          <div className="storyLabel">{lead.section}</div>
+          <div className="storyLabel">{lead.section}{lead.isPrototype ? " / PROTOTYPE" : ""}</div>
           <Link href={"/article/" + lead.slug}><h1>{lead.title}</h1></Link>
           <p className="heroStandfirst">{lead.dek}</p>
           <div className="creditLine">{lead.author} · {lead.publishedAt}</div>
@@ -33,8 +36,8 @@ export default function Home() {
         </Link>
 
         <div className="topRail">
-          <MiniStory index={1} />
-          <MiniStory index={2} />
+          <MiniStory story={articles[1]} />
+          <MiniStory story={articles[2]} />
         </div>
       </section>
 
@@ -54,15 +57,12 @@ export default function Home() {
       <section className="glanceModule">
         <div className="moduleHeading">
           <h2>Africa at a Glance</h2>
-          <span>Updated for the prototype newsroom</span>
+          <span>Markets, climate, trade and logistics</span>
         </div>
         <div className="glanceBody">
           <div className="africaPanel">
             <div className="continentWord">AFRICA</div>
-            <i className="mapDot dot1" />
-            <i className="mapDot dot2" />
-            <i className="mapDot dot3" />
-            <i className="mapDot dot4" />
+            <i className="mapDot dot1" /><i className="mapDot dot2" /><i className="mapDot dot3" /><i className="mapDot dot4" />
           </div>
           <ol className="glanceItems">
             <li><span>1</span><p><strong>Tanzania:</strong> logistics and quality aggregation increasingly determine export economics.</p></li>
@@ -70,7 +70,7 @@ export default function Home() {
             <li><span>3</span><p><strong>Regional trade:</strong> policy notices can change reachable demand before price charts catch up.</p></li>
             <li><span>4</span><p><strong>Input markets:</strong> credit, currency and dealer liquidity shape whether supply reaches farms.</p></li>
             <li><span>5</span><p><strong>Ports:</strong> food trade needs corridor intelligence, not just harvest reporting.</p></li>
-            <li><span>6</span><p><strong>Markets:</strong> MARS is being built to connect price, freight, climate and verified events.</p></li>
+            <li><span>6</span><p><strong>Markets:</strong> MARS connects price, freight, climate and verified events.</p></li>
           </ol>
         </div>
       </section>
@@ -85,24 +85,20 @@ export default function Home() {
       </section>
 
       <section className="deskSection">
-        <div className="deskHeader"><Link href="/section/markets">Markets</Link><span>Price, demand and the forces moving both.</span></div>
+        <div className="deskHeader"><Link href="/markets">Markets</Link><span>Price, demand and the forces moving both.</span></div>
         <div className="deskGrid">
-          <MiniStory index={5} />
+          <MiniStory story={articles[5]} />
           <div className="marketBoard">
             <div className="marketBoardHead"><span>Market Board</span><small>Prototype data</small></div>
             {marketRows.map(row => (
-              <div className="marketBoardRow" key={row.name}>
-                <strong>{row.name}</strong>
-                <span>{row.value}</span>
-                <em className={row.direction === "up" ? "positive" : "negative"}>{row.move}</em>
-              </div>
+              <div className="marketBoardRow" key={row.name}><strong>{row.name}</strong><span>{row.value}</span><em className={row.direction === "up" ? "positive" : "negative"}>{row.move}</em></div>
             ))}
           </div>
           <div className="deskNote">
             <span className="storyLabel">WHY MARS</span>
             <h3>Price is only half the story.</h3>
             <p>Commodity intelligence becomes more useful when freight, rainfall, rules and counterparties sit next to the price.</p>
-            <Link href="/section/markets">Open Markets →</Link>
+            <Link href="/markets">Open Markets →</Link>
           </div>
         </div>
       </section>
@@ -119,7 +115,7 @@ export default function Home() {
           <article className="colorPanel colorPanelBlue">
             <span className="storyLabel">CLIMATE SIGNAL</span>
             <h2>Local crop context beats generic weather alerts.</h2>
-            <p>MARS will connect rainfall anomalies with planting stages, road access and market exposure.</p>
+            <p>MARS connects rainfall anomalies with planting stages, road access and market exposure.</p>
             <Link href="/section/climate">Explore Climate →</Link>
           </article>
         </div>
@@ -128,17 +124,14 @@ export default function Home() {
       <section className="deskSection">
         <div className="deskHeader"><Link href="/section/trade">Trade & Logistics</Link><span>Where opportunity meets movement.</span></div>
         <div className="threeUp">
-          {[2,4,0].map(index => {
-            const story = articles[index];
-            return (
-              <article className={"feedCard accentLine-" + story.accent} key={story.slug}>
-                <img src={story.image} alt="" />
-                <div className="storyLabel">{story.section}</div>
-                <Link href={"/article/" + story.slug}><h3>{story.title}</h3></Link>
-                <p>{story.dek}</p>
-              </article>
-            );
-          })}
+          {[articles[2],articles[4],articles[0]].map(story => (
+            <article className={"feedCard accentLine-" + story.accent} key={story.slug}>
+              <img src={story.image} alt="" />
+              <div className="storyLabel">{story.section}</div>
+              <Link href={"/article/" + story.slug}><h3>{story.title}</h3></Link>
+              <p>{story.dek}</p>
+            </article>
+          ))}
         </div>
       </section>
 

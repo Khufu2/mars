@@ -110,6 +110,18 @@ export default function NewArticlePage({ searchParams }: { searchParams?: { id?:
     if (body.status === "published") setTimeout(() => { window.location.href = "/article/" + body.slug; }, 600);
   }
 
+  async function submitForReview() {
+    const id = await saveServer();
+    if (!id) return;
+    setWorking(true);
+    const response = await authedFetch("/api/studio/articles/" + id + "/review", { method:"POST" });
+    const body = await response.json();
+    setWorking(false);
+    if (!response.ok) { setNotice(body.error || "Could not submit for review."); return; }
+    patch("status","review");
+    setNotice("Submitted for editorial review.");
+  }
+
   async function uploadImage(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]; if (!file) return;
     const token = await newsroomToken();
@@ -133,7 +145,7 @@ export default function NewArticlePage({ searchParams }: { searchParams?: { id?:
       <header className="composerHeader">
         <div><span className="miniLabel">MARS NEWSROOM / COMPOSER</span><h1>{draft.id ? "Edit the story." : "Write the story."}</h1></div>
         <div className="composerStatus">
-          <span className={signedIn ? "statusLive" : "statusLocal"}>{signedIn ? "Database connected" : "Local mode"}</span>
+          <span className={signedIn ? "statusLive" : "statusLocal"}>{signedIn ? "Database · " + (role || "newsroom") : "Local mode"}</span>
           {signedIn ? <button onClick={signOut}>Sign out</button> : <a href="/studio/login">Sign in</a>}
         </div>
       </header>
@@ -200,12 +212,14 @@ export default function NewArticlePage({ searchParams }: { searchParams?: { id?:
               <label>Disclosure<input value={draft.sponsorDisclosure} onChange={e=>patch("sponsorDisclosure",e.target.value)} placeholder="Presented by… / Sponsored by…" /></label>
             </div>
             <label>Schedule publication<input type="datetime-local" value={draft.scheduledAt} onChange={e=>patch("scheduledAt",e.target.value)} /></label>
+            {draft.status === "published" && <label className="correctionField">Correction / update note<textarea value={draft.correctionNote} onChange={e=>patch("correctionNote",e.target.value)} placeholder="Explain what changed and why. This note will be visible to readers." /><span>Required for every change to an already-published story.</span></label>}
           </div>
 
           <div className="composerActions">
             <button onClick={saveLocal} className="secondaryButton">Save in browser</button>
-            <button onClick={saveServer} className="secondaryButton" disabled={working}>{working?"Working…":"Save newsroom draft"}</button>
-            <button onClick={publish} className="primaryButton" disabled={working}>{draft.scheduledAt ? "Schedule story" : "Publish story"}</button>
+            <button onClick={saveServer} className="secondaryButton" disabled={working}>{working?"Working…":draft.status==="published"?"Save correction":"Save newsroom draft"}</button>
+            {draft.status !== "published" && role === "author" && <button onClick={submitForReview} className="primaryButton" disabled={working}>Submit for review</button>}
+            {draft.status !== "published" && ["admin","editor"].includes(role || "") && <button onClick={publish} className="primaryButton" disabled={working}>{draft.scheduledAt ? "Schedule story" : "Publish story"}</button>}
           </div>
           {notice && <div className="composerNotice">{notice}</div>}
         </section>

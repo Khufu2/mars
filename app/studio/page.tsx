@@ -13,7 +13,8 @@ export default function StudioPage() {
   const [items,setItems] = useState<QueueItem[]>([]);
   const [signedIn,setSignedIn] = useState(false);
   const [mode,setMode] = useState<"loading"|"local"|"live">("loading");
-  const [notice,setNotice] = useState("");\n  const [role,setRole] = useState<string | null>(null);
+  const [notice,setNotice] = useState("");
+  const [role,setRole] = useState<string | null>(null);
 
   useEffect(()=>{
     (async()=>{

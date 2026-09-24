@@ -1,7 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { articles as prototypeArticles, type Article, type StorySection } from "@/lib/data";
 
-type DbAuthor = { name?: string | null };
+type DbAuthor = { name?: string | null };\ntype DbCorrection = { note?: string | null; published_at?: string | null };
 type DbSource = {
   source_url?: string | null;
   note?: string | null;
@@ -101,6 +101,10 @@ function mapDbArticle(row: DbArticle): PublishedArticle {
     metaDescription: row.meta_description || undefined,
     sponsorName: row.sponsor_name || undefined,
     sponsorDisclosure: row.sponsor_disclosure || undefined,
+    corrections: (row.corrections || []).map(item => ({
+      note: item.note || "",
+      publishedAt: item.published_at ? new Intl.DateTimeFormat("en", { month:"short", day:"numeric", year:"numeric" }).format(new Date(item.published_at)) : undefined,
+    })).filter(item => item.note),
     sources: (row.article_sources || []).map(item => ({
       name: item.source?.name || "Source",
       url: item.source_url || item.source?.url || "",

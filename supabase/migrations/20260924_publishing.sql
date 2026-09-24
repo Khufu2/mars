@@ -1,6 +1,9 @@
 -- MARS publishing layer: run after 20260922_init.sql
 
-alter table public.authors add column if not exists user_id uuid references auth.users(id) on delete set null;\ncreate unique index if not exists authors_user_id_idx on public.authors(user_id) where user_id is not null;\n\ncreate table if not exists public.profiles (
+alter table public.authors add column if not exists user_id uuid references auth.users(id) on delete set null;
+create unique index if not exists authors_user_id_idx on public.authors(user_id) where user_id is not null;
+
+create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   display_name text,
   role text not null default 'author' check (role in ('admin','editor','author')),

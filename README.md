@@ -30,6 +30,9 @@ Run these migrations in order:
 ```
 supabase/migrations/20260922_init.sql
 supabase/migrations/20260924_publishing.sql
+
+# Optional, enables 5-minute scheduled publishing inside Supabase:
+supabase/migrations/20260924_optional_scheduling.sql
 ```
 
 Add these Vercel environment variables:
@@ -70,7 +73,7 @@ The first authenticated newsroom user is promoted to admin if no admin exists ye
 
 ## Scheduling
 
-`vercel.json` registers an hourly cron for `/api/cron/publish-scheduled`. Set `CRON_SECRET` in Vercel so scheduled stories can be promoted to published status safely.
+Vercel Hobby only permits daily cron jobs, so MARS does not depend on Vercel Cron. For precise scheduling, apply `20260924_optional_scheduling.sql`; it uses Supabase `pg_cron` to publish due stories every five minutes and populate social/newsletter queues. The `/api/cron/publish-scheduled` endpoint remains available for a future external scheduler or Vercel Pro setup.
 
 ## Local development
 

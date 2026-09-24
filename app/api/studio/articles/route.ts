@@ -49,7 +49,9 @@ export async function POST(request: Request) {
     const slug = slugify(String(body.slug || title));
     if (!title || !slug) return NextResponse.json({ error: "Headline is required." }, { status: 400 });
 
-    const authorId = await ensureAuthor(session.client!, session.user!, session.profile);\n\n    const payload = {
+    const authorId = await ensureAuthor(session.client!, session.user!, session.profile);
+
+    const payload = {
       slug, title,
       dek: String(body.dek || "").trim(),
       kicker: String(body.kicker || "").trim(),
@@ -70,7 +72,8 @@ export async function POST(request: Request) {
       sponsor_name: String(body.sponsorName || "").trim() || null,
       sponsor_disclosure: String(body.sponsorDisclosure || "").trim() || null,
       scheduled_at: body.scheduledAt ? new Date(body.scheduledAt).toISOString() : null,
-      author_id: authorId,\n      created_by: session.user!.id,
+      author_id: authorId,
+      created_by: session.user!.id,
       updated_at: new Date().toISOString(),
     };
 

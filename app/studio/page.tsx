@@ -14,6 +14,7 @@ export default function StudioPage() {
   const [signedIn,setSignedIn] = useState(false);
   const [mode,setMode] = useState<"loading"|"local"|"live">("loading");
   const [notice,setNotice] = useState("");
+  const [role,setRole] = useState<string | null>(null);
 
   useEffect(()=>{
     (async()=>{
@@ -22,10 +23,19 @@ export default function StudioPage() {
       if (!token) { setMode("local"); return; }
       const response = await authedFetch("/api/studio/articles");
       const body = await response.json();
-      if (response.ok && body.mode === "live") { setItems(body.items || []); setMode("live"); }
+      if (response.ok && body.mode === "live") { setItems(body.items || []); setRole(body.role || null); setMode("live"); }
       else { setMode("local"); setNotice(body.error || "Newsroom database is not connected yet."); }
     })();
   },[]);
+
+  async function archiveStory(id:string){
+    if (!window.confirm("Archive this story? Published stories will disappear from the public site.")) return;
+    const response=await authedFetch("/api/studio/articles/"+id+"/archive",{method:"POST"});
+    const body=await response.json();
+    if (!response.ok){setNotice(body.error || "Could not archive story.");return;}
+    setItems(current=>current.map(item=>item.id===id?{...item,status:"archived"}:item));
+    setNotice("Story archived.");
+  }
 
   async function signOut(){
     await newsroomClient()?.auth.signOut();
@@ -85,7 +95,9 @@ export default function StudioPage() {
           {items.length===0 ? <div className="queueEmpty"><h3>No newsroom stories yet.</h3><p>Create the first MARS article and it will appear here.</p></div> :
             items.map(item=>(
               <div className="queueRow" key={item.id}>
-                <div><Link href={"/studio/articles/new?id=" + item.id}><strong>{item.title}</strong></Link><small>{item.story_type || "Story"} · /{item.slug}</small></div>
+                <div><Link href={"/studio/articles/new?id=" + item.id}><strong>{item.title}</strong></Link><small>{item.story_type || "Story"} · /{item.slug}</small>
+                  <div className="queueActions"><Link href={"/studio/articles/new?id="+item.id}>Edit</Link>{item.status==="published"&&<Link href={"/article/"+item.slug}>View</Link>}{item.status==="published"&&<Link href={"/studio/social?slug="+item.slug}>Social</Link>}{["admin","editor"].includes(role||"")&&item.status!=="archived"&&<button onClick={()=>archiveStory(item.id)}>Archive</button>}</div>
+                </div>
                 <span>{item.section}</span>
                 <span className={"statusPill status-"+item.status}>{item.status}</span>
                 <span>{item.updated_at ? new Date(item.updated_at).toLocaleString() : "—"}</span>

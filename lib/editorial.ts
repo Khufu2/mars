@@ -5,6 +5,8 @@ export type ComposerBlock = { eyebrow: string; title: string; body: string[] };
 
 export type ComposerDraft = {
   id?: string;
+  status: string;
+  correctionNote: string;
   title: string;
   slug: string;
   dek: string;
@@ -35,17 +37,39 @@ export type ComposerDraft = {
 
 export function blankDraft(): ComposerDraft {
   return {
-    title: "", slug: "", dek: "", kicker: "", section: "Markets", storyType: "News",
-    region: "East Africa", country: "Tanzania", commodity: "", featuredImageUrl: "", imageCredit: "",
+    status: "draft",
+    correctionNote: "",
+    title: "",
+    slug: "",
+    dek: "",
+    kicker: "",
+    section: "Markets",
+    storyType: "News",
+    region: "East Africa",
+    country: "Tanzania",
+    commodity: "",
+    featuredImageUrl: "",
+    imageCredit: "",
     blocks: [
       { eyebrow: "THE MOVE", title: "", body: [""] },
       { eyebrow: "WHY IT MATTERS", title: "", body: [""] },
       { eyebrow: "THE NUMBERS", title: "", body: [""] },
       { eyebrow: "WATCH", title: "", body: [""] },
     ],
-    sources: "", metaTitle: "", metaDescription: "", socialCopy: "", sponsorName: "", sponsorDisclosure: "",
-    scheduledAt: "", includeInBrief: true,
-    checks: { primarySource: false, figuresChecked: false, imageRights: false, headlineSupported: false },
+    sources: "",
+    metaTitle: "",
+    metaDescription: "",
+    socialCopy: "",
+    sponsorName: "",
+    sponsorDisclosure: "",
+    scheduledAt: "",
+    includeInBrief: true,
+    checks: {
+      primarySource: false,
+      figuresChecked: false,
+      imageRights: false,
+      headlineSupported: false,
+    },
   };
 }
 
@@ -62,6 +86,7 @@ export function draftReadiness(draft: ComposerDraft) {
     sourceCount < 1 && "at least one source",
     !draft.metaDescription.trim() && "SEO description",
     !checksReady && "editorial checklist",
+    draft.status === "published" && draft.correctionNote.trim().length < 8 && "correction/update note",
   ].filter(Boolean) as string[];
   return { ready: missing.length === 0, missing, sourceCount };
 }

@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import { articles as prototypeArticles, type Article, type StorySection } from "@/lib/data";
 
 type DbAuthor = { name?: string | null };
+type DbCorrection = { note?: string | null; published_at?: string | null };
 type DbSource = {
   source_url?: string | null;
   note?: string | null;
@@ -31,6 +32,7 @@ type DbArticle = {
   sponsor_disclosure?: string | null;
   author?: DbAuthor | null;
   article_sources?: DbSource[] | null;
+  corrections?: DbCorrection[] | null;
 };
 
 export function hasSupabase() {
@@ -70,6 +72,7 @@ export type PublishedArticle = Article & {
   sponsorName?: string;
   sponsorDisclosure?: string;
   sources?: Array<{ name: string; url: string; note?: string; verified?: boolean }>;
+  corrections?: Array<{ note: string; publishedAt?: string }>;
   isPrototype?: boolean;
 };
 
@@ -101,12 +104,22 @@ function mapDbArticle(row: DbArticle): PublishedArticle {
     metaDescription: row.meta_description || undefined,
     sponsorName: row.sponsor_name || undefined,
     sponsorDisclosure: row.sponsor_disclosure || undefined,
-    sources: (row.article_sources || []).map(item => ({
-      name: item.source?.name || "Source",
-      url: item.source_url || item.source?.url || "",
-      note: item.note || undefined,
-      verified: Boolean(item.verified),
-    })).filter(item => item.url),
+    corrections: (row.corrections || [])
+      .map(item => ({
+        note: item.note || "",
+        publishedAt: item.published_at
+          ? new Intl.DateTimeFormat("en", { month:"short", day:"numeric", year:"numeric" }).format(new Date(item.published_at))
+          : undefined,
+      }))
+      .filter(item => item.note),
+    sources: (row.article_sources || [])
+      .map(item => ({
+        name: item.source?.name || "Source",
+        url: item.source_url || item.source?.url || "",
+        note: item.note || undefined,
+        verified: Boolean(item.verified),
+      }))
+      .filter(item => item.url),
     isPrototype: false,
   };
 }
@@ -115,7 +128,8 @@ const select = [
   "id","slug","title","dek","kicker","body","section","region","country","commodity","story_type",
   "featured_image_url","image_credit","published_at","updated_at","meta_title","meta_description",
   "sponsor_name","sponsor_disclosure","author:authors(name)",
-  "article_sources(source_url,note,verified,source:sources(name,url,source_type))"
+  "article_sources(source_url,note,verified,source:sources(name,url,source_type))",
+  "corrections(note,published_at)"
 ].join(",");
 
 export async function getPublishedArticles(limit = 30): Promise<PublishedArticle[]> {
@@ -144,9 +158,15 @@ export async function getHomepageArticles(minimum = 6): Promise<PublishedArticle
 export async function getArticleBySlug(slug: string): Promise<PublishedArticle | null> {
   const client = publicClient();
   if (client) {
-    const { data } = await client.from("articles").select(select).eq("slug", slug).eq("status", "published").maybeSingle();
+    const { data } = await client
+      .from("articles")
+      .select(select)
+      .eq("slug", slug)
+      .eq("status", "published")
+      .maybeSingle();
     if (data) return mapDbArticle(data as unknown as DbArticle);
   }
+
   const prototype = prototypeArticles.find(article => article.slug === slug);
   return prototype ? { ...prototype, isPrototype: true } : null;
 }
@@ -155,8 +175,11 @@ export async function searchPublishedArticles(query: string): Promise<PublishedA
   const normalized = query.trim().toLowerCase();
   const all = await getPublishedArticles(80);
   if (!normalized) return all;
+
   return all.filter(article =>
     [article.title, article.dek, article.section, article.region, article.country, article.commodity || "", article.author]
-      .join(" ").toLowerCase().includes(normalized)
+      .join(" ")
+      .toLowerCase()
+      .includes(normalized)
   );
 }

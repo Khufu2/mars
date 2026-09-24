@@ -55,6 +55,8 @@ export default async function ArticlePage({ params }: { params: { slug: string }
           <span>SHARE</span>
           <a href={"mailto:?subject=" + encodeURIComponent(article.title)}>Email</a>
           <a href={"https://wa.me/?text=" + encodeURIComponent(article.title)} target="_blank" rel="noreferrer">WhatsApp</a>
+          <a href={"https://www.linkedin.com/sharing/share-offsite/?url=" + encodeURIComponent((process.env.NEXT_PUBLIC_SITE_URL || "https://mars-rust.vercel.app") + "/article/" + article.slug)} target="_blank" rel="noreferrer">LinkedIn</a>
+          <a href={"https://x.com/intent/post?text=" + encodeURIComponent(article.title + " " + (process.env.NEXT_PUBLIC_SITE_URL || "https://mars-rust.vercel.app") + "/article/" + article.slug)} target="_blank" rel="noreferrer">X</a>
         </div>
         <article className="articleBody">
           {article.sections.map(section => (
@@ -64,6 +66,10 @@ export default async function ArticlePage({ params }: { params: { slug: string }
               {section.body.map(p => <p key={p}>{p}</p>)}
             </section>
           ))}
+          {article.corrections?.length ? <section className="correctionsBox">
+            <strong>Corrections & updates</strong>
+            {article.corrections.map((correction,index)=><div key={index}><span>{correction.publishedAt || "Update"}</span><p>{correction.note}</p></div>)}
+          </section> : null}
           <div className="sourceBox">
             <strong>{article.sources?.length ? "Sources & evidence" : "Evidence standard"}</strong>
             {article.sources?.length ? (

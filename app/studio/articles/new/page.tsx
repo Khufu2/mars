@@ -18,6 +18,7 @@ export default function NewArticlePage({ searchParams }: { searchParams?: { id?:
   const [notice, setNotice] = useState("");
   const [working, setWorking] = useState(false);
   const [signedIn, setSignedIn] = useState(false);
+  const [role, setRole] = useState<string | null>(null);
   const [loadingStory, setLoadingStory] = useState(Boolean(searchParams?.id));
   const readiness = useMemo(() => draftReadiness(draft), [draft]);
 
@@ -25,6 +26,11 @@ export default function NewArticlePage({ searchParams }: { searchParams?: { id?:
     (async () => {
       const token = await newsroomToken();
       setSignedIn(Boolean(token));
+      if (token) {
+        const meResponse = await authedFetch("/api/studio/me");
+        const me = await meResponse.json();
+        if (meResponse.ok) setRole(me.role || null);
+      }
 
       if (searchParams?.id && token) {
         const response = await authedFetch("/api/studio/articles/" + searchParams.id);
@@ -34,7 +40,7 @@ export default function NewArticlePage({ searchParams }: { searchParams?: { id?:
           const sources = (a.article_sources || []).map((s:any) => (s.source_url || s.source?.url || "") + (s.note ? " | " + s.note : "")).filter(Boolean).join("\n");
           setDraft({
             ...blankDraft(),
-            id:a.id, title:a.title || "", slug:a.slug || "", dek:a.dek || "", kicker:a.kicker || "",
+            id:a.id, status:a.status || "draft", correctionNote:"", title:a.title || "", slug:a.slug || "", dek:a.dek || "", kicker:a.kicker || "",
             section:a.section || "Markets", storyType:a.story_type || "News", region:a.region || "Africa",
             country:a.country || "Regional", commodity:a.commodity || "", featuredImageUrl:a.featured_image_url || "",
             imageCredit:a.image_credit || "", blocks:Array.isArray(a.body) && a.body.length ? a.body : blankDraft().blocks,

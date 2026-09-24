@@ -274,8 +274,6 @@ for all to authenticated using (
 );
 
 drop policy if exists "profiles read self" on public.profiles;
-create policy "profiles read newsroom" on public.profiles
-for select to authenticated using (
-  id = auth.uid()
-  or exists (select 1 from public.profiles p where p.id = auth.uid() and p.role in ('admin','editor'))
-);
+drop policy if exists "profiles read newsroom" on public.profiles;
+create policy "profiles read self" on public.profiles
+for select to authenticated using (id = auth.uid());

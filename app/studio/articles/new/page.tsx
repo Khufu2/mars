@@ -7,21 +7,54 @@ import { authedFetch, newsroomClient, newsroomToken } from "@/lib/studioClient";
 function slugify(value: string) {
   return value.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0,90);
 }
+function localDateTime(value?: string | null) {
+  if (!value) return "";
+  const d = new Date(value); const offset = d.getTimezoneOffset();
+  return new Date(d.getTime() - offset*60000).toISOString().slice(0,16);
+}
 
-export default function NewArticlePage() {
+export default function NewArticlePage({ searchParams }: { searchParams?: { id?: string } }) {
   const [draft, setDraft] = useState<ComposerDraft>(blankDraft());
   const [notice, setNotice] = useState("");
   const [working, setWorking] = useState(false);
   const [signedIn, setSignedIn] = useState(false);
+  const [loadingStory, setLoadingStory] = useState(Boolean(searchParams?.id));
   const readiness = useMemo(() => draftReadiness(draft), [draft]);
 
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem("mars-composer-draft");
-      if (saved) setDraft({ ...blankDraft(), ...JSON.parse(saved) });
-    } catch {}
-    newsroomToken().then(token => setSignedIn(Boolean(token)));
-  }, []);
+    (async () => {
+      const token = await newsroomToken();
+      setSignedIn(Boolean(token));
+
+      if (searchParams?.id && token) {
+        const response = await authedFetch("/api/studio/articles/" + searchParams.id);
+        const body = await response.json();
+        if (response.ok && body.article) {
+          const a = body.article;
+          const sources = (a.article_sources || []).map((s:any) => (s.source_url || s.source?.url || "") + (s.note ? " | " + s.note : "")).filter(Boolean).join("\n");
+          setDraft({
+            ...blankDraft(),
+            id:a.id, title:a.title || "", slug:a.slug || "", dek:a.dek || "", kicker:a.kicker || "",
+            section:a.section || "Markets", storyType:a.story_type || "News", region:a.region || "Africa",
+            country:a.country || "Regional", commodity:a.commodity || "", featuredImageUrl:a.featured_image_url || "",
+            imageCredit:a.image_credit || "", blocks:Array.isArray(a.body) && a.body.length ? a.body : blankDraft().blocks,
+            sources, metaTitle:a.meta_title || "", metaDescription:a.meta_description || "",
+            socialCopy:a.social_copy?.caption || "", sponsorName:a.sponsor_name || "", sponsorDisclosure:a.sponsor_disclosure || "",
+            scheduledAt:localDateTime(a.scheduled_at), includeInBrief:a.include_in_brief !== false,
+            checks:{ ...blankDraft().checks, ...(a.editorial_checks || {}) },
+          });
+        } else setNotice(body.error || "Could not load this newsroom story.");
+        setLoadingStory(false);
+        return;
+      }
+
+      try {
+        const saved = localStorage.getItem("mars-composer-draft");
+        if (saved) setDraft({ ...blankDraft(), ...JSON.parse(saved) });
+      } catch {}
+      setLoadingStory(false);
+    })();
+  }, [searchParams?.id]);
 
   function patch<K extends keyof ComposerDraft>(key: K, value: ComposerDraft[K]) {
     setDraft(current => {
@@ -32,11 +65,10 @@ export default function NewArticlePage() {
   }
 
   function updateBlock(index: number, field: "eyebrow"|"title"|"body", value: string) {
-    const blocks = draft.blocks.map((block, i) => {
+    patch("blocks", draft.blocks.map((block, i) => {
       if (i !== index) return block;
       return field === "body" ? { ...block, body: value.split("\n\n") } : { ...block, [field]: value };
-    });
-    patch("blocks", blocks);
+    }));
   }
 
   function saveLocal() {
@@ -53,7 +85,10 @@ export default function NewArticlePage() {
     setWorking(false);
     if (!response.ok) { setNotice(body.error || "Could not save draft."); return null; }
     const id = draft.id || body.article?.id;
-    if (id && !draft.id) setDraft(current => ({ ...current, id }));
+    if (id && !draft.id) {
+      setDraft(current => ({ ...current, id }));
+      window.history.replaceState(null, "", "/studio/articles/new?id=" + id);
+    }
     localStorage.setItem("mars-composer-draft", JSON.stringify({ ...draft, id }));
     setNotice("Saved to MARS newsroom.");
     return id || null;
@@ -65,8 +100,7 @@ export default function NewArticlePage() {
     if (!id) return;
     setWorking(true);
     const response = await authedFetch("/api/studio/articles/" + id + "/publish", {
-      method:"POST",
-      body:JSON.stringify({ scheduledAt: draft.scheduledAt || null }),
+      method:"POST", body:JSON.stringify({ scheduledAt: draft.scheduledAt || null }),
     });
     const body = await response.json();
     setWorking(false);
@@ -77,8 +111,7 @@ export default function NewArticlePage() {
   }
 
   async function uploadImage(e: ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const file = e.target.files?.[0]; if (!file) return;
     const token = await newsroomToken();
     if (!token) { setNotice("Sign in and connect Supabase before uploading media. You can use an external image URL for now."); return; }
     setWorking(true);
@@ -90,15 +123,15 @@ export default function NewArticlePage() {
   }
 
   async function signOut() {
-    await newsroomClient()?.auth.signOut();
-    setSignedIn(false);
-    setNotice("Signed out. Local drafting remains available.");
+    await newsroomClient()?.auth.signOut(); setSignedIn(false); setNotice("Signed out. Local drafting remains available.");
   }
+
+  if (loadingStory) return <main className="composerPage"><div className="loadingStory">Loading newsroom story…</div></main>;
 
   return (
     <main className="composerPage">
       <header className="composerHeader">
-        <div><span className="miniLabel">MARS NEWSROOM / COMPOSER</span><h1>Write the story.</h1></div>
+        <div><span className="miniLabel">MARS NEWSROOM / COMPOSER</span><h1>{draft.id ? "Edit the story." : "Write the story."}</h1></div>
         <div className="composerStatus">
           <span className={signedIn ? "statusLive" : "statusLocal"}>{signedIn ? "Database connected" : "Local mode"}</span>
           {signedIn ? <button onClick={signOut}>Sign out</button> : <a href="/studio/login">Sign in</a>}
@@ -140,7 +173,7 @@ export default function NewArticlePage() {
           <div className="formSection">
             <div className="formSectionTitle"><span>03</span><h2>Evidence</h2></div>
             <label>Sources<textarea className="sourceTextarea" value={draft.sources} onChange={e=>patch("sources",e.target.value)} placeholder={"One source per line.\nhttps://official-source.example/document | Primary announcement\nhttps://second-source.example/report | Corroborating data"} /></label>
-            <p className="fieldHelp">Use primary documents whenever possible. You can add a note after <strong>|</strong>.</p>
+            <p className="fieldHelp">Use primary documents whenever possible. Add a note after <strong>|</strong>.</p>
             <div className="checkGrid">
               <label><input type="checkbox" checked={draft.checks.primarySource} onChange={e=>patch("checks",{...draft.checks,primarySource:e.target.checked})} /> Primary source opened</label>
               <label><input type="checkbox" checked={draft.checks.figuresChecked} onChange={e=>patch("checks",{...draft.checks,figuresChecked:e.target.checked})} /> Figures/date checked</label>

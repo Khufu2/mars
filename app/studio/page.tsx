@@ -85,7 +85,7 @@ export default function StudioPage() {
           {items.length===0 ? <div className="queueEmpty"><h3>No newsroom stories yet.</h3><p>Create the first MARS article and it will appear here.</p></div> :
             items.map(item=>(
               <div className="queueRow" key={item.id}>
-                <div><strong>{item.title}</strong><small>{item.story_type || "Story"} · /{item.slug}</small></div>
+                <div><Link href={"/studio/articles/new?id=" + item.id}><strong>{item.title}</strong></Link><small>{item.story_type || "Story"} · /{item.slug}</small></div>
                 <span>{item.section}</span>
                 <span className={"statusPill status-"+item.status}>{item.status}</span>
                 <span>{item.updated_at ? new Date(item.updated_at).toLocaleString() : "—"}</span>

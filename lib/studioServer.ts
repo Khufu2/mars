@@ -52,3 +52,18 @@ export function parseSourceLines(value: unknown) {
     })
     .filter(item => /^https?:\/\//i.test(item.url));
 }
+
+
+export async function ensureAuthor(client: any, user: any, profile: any) {
+  const { data: existing } = await client.from("authors").select("id").eq("user_id", user.id).maybeSingle();
+  if (existing?.id) return existing.id;
+  const displayName = profile?.display_name || user.user_metadata?.display_name || user.email?.split("@")[0] || "MARS Editor";
+  const authorSlug = slugify(displayName) + "-" + user.id.slice(0,6);
+  const { data: created, error } = await client.from("authors").insert({
+    user_id: user.id,
+    name: displayName,
+    slug: authorSlug,
+  }).select("id").single();
+  if (error) throw error;
+  return created.id;
+}

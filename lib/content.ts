@@ -1,7 +1,8 @@
 import { createClient } from "@supabase/supabase-js";
 import { articles as prototypeArticles, type Article, type StorySection } from "@/lib/data";
 
-type DbAuthor = { name?: string | null };\ntype DbCorrection = { note?: string | null; published_at?: string | null };
+type DbAuthor = { name?: string | null };
+type DbCorrection = { note?: string | null; published_at?: string | null };
 type DbSource = {
   source_url?: string | null;
   note?: string | null;

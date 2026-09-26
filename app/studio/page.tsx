@@ -82,7 +82,8 @@ export default function StudioPage() {
           <h2>{mode==="live" ? "Your newsroom" : "Ready for tomorrow's database"}</h2>
         </div>
         <div className="toolbarActions">
-          <Link href="/studio/intake" className="secondaryButton">News intake</Link>\n          <Link href="/studio/discover" className="secondaryButton">Web search</Link>
+          <Link href="/studio/intake" className="secondaryButton">News intake</Link>
+          <Link href="/studio/discover" className="secondaryButton">Web search</Link>
           <Link href="/studio/articles/new" className="primaryButton">New story</Link>
         </div>
       </section>

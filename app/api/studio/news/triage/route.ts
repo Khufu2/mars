@@ -50,7 +50,7 @@ Return JSON with:
             relevance_score:{type:"INTEGER"},
             desk:{type:"STRING"},
             region:{type:"STRING"},
-            commodity:{type:["STRING","NULL"]},
+            commodity:{type:"STRING",nullable:true},
             summary:{type:"STRING"},
             angle:{type:"STRING"},
             suggested_headline:{type:"STRING"},

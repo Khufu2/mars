@@ -36,7 +36,7 @@ export default async function ArticlePage({ params }: { params: { slug: string }
         <span>{article.region}</span>
         {article.storyType && <span>{article.storyType}</span>}
       </div>
-      {article.sponsorName && <div className="sponsorDisclosure">{article.sponsorDisclosure || "Sponsored"} · {article.sponsorName}</div>}
+      {article.storyType === "Radar" && <div className="radarDisclosure"><strong>MARS Radar</strong><span>Automatically surfaced source brief. MARS has not independently rewritten the underlying report; use the original source for full context.</span>{article.canonicalUrl && <a href={article.canonicalUrl} target="_blank" rel="noreferrer">Read original ↗</a>}</div>}\n      {article.sponsorName && <div className="sponsorDisclosure">{article.sponsorDisclosure || "Sponsored"} · {article.sponsorName}</div>}
       <header className={"articleHero accent-" + article.accent}>
         <h1>{article.title}</h1>
         <p>{article.dek}</p>

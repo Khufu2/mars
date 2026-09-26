@@ -30,6 +30,7 @@ Run these migrations in order:
 ```
 supabase/migrations/20260922_init.sql
 supabase/migrations/20260924_publishing.sql
+supabase/migrations/20260926_news_intake.sql
 
 # Optional, enables 5-minute scheduled publishing inside Supabase:
 supabase/migrations/20260924_optional_scheduling.sql
@@ -42,6 +43,13 @@ NEXT_PUBLIC_SITE_URL=https://your-domain
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
+
+# Structured news intake + AI triage
+NEWSAPI_AI_KEY=
+GEMINI_API_KEY=
+MARS_TRIAGE_MODEL=gemini-3.5-flash-lite
+MARS_EDITOR_MODEL=gemini-3.8-flash
+
 CRON_SECRET=
 ```
 
@@ -90,3 +98,22 @@ Open http://localhost:3000.
 Until live market feeds are connected, market figures are clearly labelled prototype data. Static prototype stories remain as a fallback only when no published Supabase content exists.
 
 See `THIRD_PARTY_NOTICES.md` for open-source and design references.
+
+
+## MARS news radar
+
+The production newsroom includes a provider-agnostic intake layer at `/studio/intake`.
+
+The first provider is NewsAPI.ai / Event Registry. MARS currently defines five editorial pipelines:
+
+- East Africa agriculture
+- African commodities
+- Trade & logistics
+- Climate & food
+- Policy & capital
+
+Each pipeline requests up to 100 recent English-language articles per NewsAPI.ai search. A full sync therefore uses about five searches and can retrieve up to 500 leads before local deduplication/upsert.
+
+News leads are stored in `news_candidates` with only a limited body excerpt plus structured metadata. They are not treated as verified MARS reporting. Gemini triage assigns relevance, desk, region, commodity, a short summary, the MARS angle and explicit verification questions. Editors can then create a draft; imported news sources enter the article as **unverified** until the newsroom checklist is completed.
+
+Additional providers should implement the same candidate schema rather than creating a separate CMS path.

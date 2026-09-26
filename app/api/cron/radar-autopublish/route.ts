@@ -36,7 +36,7 @@ function ors(terms:string[]){return {"$or":terms.map(keyword=>({keyword}))};}
 function classify(title:string,slot:"morning"|"evening"){
   const text=title.toLowerCase();
   const has=(terms:string[])=>terms.some(term=>text.includes(term));
-  let section=slots[slot].desk;
+  let section:string=slots[slot].desk;
   if(has(["drought","rain","flood","climate","weather","heat","el niño","la niña"])) section="Climate";
   else if(has(["port","shipping","freight","corridor","container","rail","truck","logistics"])) section="Logistics";
   else if(has(["export","import","trade","customs","tariff","border"])) section="Trade";

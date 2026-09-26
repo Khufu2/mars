@@ -9,6 +9,7 @@ type Readiness={
   database:Record<string,boolean>|null;
   mediaBucket?:boolean;
   publishingReady?:boolean;
+  radarReady?:boolean;
   automationReady?:boolean;
   ready:boolean;
 };

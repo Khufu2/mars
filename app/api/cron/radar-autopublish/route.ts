@@ -119,9 +119,14 @@ export async function POST(request:NextRequest){
       }),
       cache:"no-store",
     });
-    if(!response.ok) throw new Error("NewsAPI.ai returned "+response.status);
-    const payload=await response.json();
-    const results=Array.isArray(payload?.articles?.results)?payload.articles.results:[];
+    const raw=await response.text();
+    if(!response.ok) throw new Error("NewsAPI.ai returned "+response.status+": "+raw.slice(0,400));
+    const payload=JSON.parse(raw);
+    if(payload?.error) throw new Error("NewsAPI.ai error: "+(payload.error?.message || payload.error || "Unknown provider error"));
+    if(!payload?.articles || !Array.isArray(payload.articles.results)) {
+      throw new Error("Unexpected NewsAPI.ai response: "+JSON.stringify(payload).slice(0,500));
+    }
+    const results=payload.articles.results;
     const authorId=await ensureRadarAuthor(client);
     const siteUrl=process.env.NEXT_PUBLIC_SITE_URL || "https://mars-rust.vercel.app";
     let published=0,duplicates=0,failed=0;

@@ -31,7 +31,7 @@ function authorized(request:NextRequest){
   return token.length>20 && digest===EXPECTED_HASH;
 }
 
-function ors(terms:string[]){return {"$or":terms.map(keyword=>({keyword}))};}
+function ors(terms:readonly string[]){return {"$or":terms.map(keyword=>({keyword}))};}
 
 function classify(title:string,slot:"morning"|"evening"){
   const text=title.toLowerCase();

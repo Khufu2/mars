@@ -31,7 +31,7 @@ function authorized(request:NextRequest){
   return token.length>20 && digest===EXPECTED_HASH;
 }
 
-function ors(terms:readonly string[]){return {"$or":terms.map(keyword=>({keyword}))};}
+function keywordOr(terms:readonly string[]){return {keyword:{"$or":[...terms]}};}
 
 function classify(title:string,slot:"morning"|"evening"){
   const text=title.toLowerCase();
@@ -90,7 +90,7 @@ export async function POST(request:NextRequest){
   const body=await request.json().catch(()=>({}));
   const slot=(body.slot==="morning"||body.slot==="evening"?body.slot:"morning") as "morning"|"evening";
   const config=slots[slot];
-  const query={"$query":{"$and":[ors(config.topics),ors(config.geos)]}};
+  const query={"$query":{"$and":[keywordOr(config.topics),keywordOr(config.geos)]},"$filter":{"isDuplicate":"skipDuplicates"}};
   const startedAt=new Date().toISOString();
 
   const {data:run,error:runError}=await client.from("ingestion_runs").insert({
@@ -115,9 +115,6 @@ export async function POST(request:NextRequest){
         includeArticleConcepts:true,
         includeArticleLocation:true,
         includeArticleImage:false,
-        dataType:["news","pr"],
-        lang:["eng"],
-        forceMaxDataTimeWindow:7,
         apiKey,
       }),
       cache:"no-store",

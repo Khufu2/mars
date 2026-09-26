@@ -39,7 +39,7 @@ export default function StudioSetup(){
       <div><span className="miniLabel">MARS NEWSROOM / LAUNCH CHECK</span><h1>Production readiness.</h1></div>
       {data && <div className="readinessBadges">
         <span className={"demoBadge "+(data.publishingReady?"liveBadge":"")}>{data.publishingReady?"PUBLISHING READY":"PUBLISHING SETUP"}</span>
-        <span className={"demoBadge "+(data.automationReady?"liveBadge":"")}>{data.automationReady?"NEWS AI READY":"NEWS AI SETUP"}</span>
+        <span className={"demoBadge "+(data.radarReady?"liveBadge":"")}>{data.radarReady?"RADAR READY":"RADAR SETUP"}</span>\n        <span className={"demoBadge "+(data.automationReady?"liveBadge":"")}>{data.automationReady?"OPTIONAL AI READY":"AI OPTIONAL"}</span>
       </div>}
     </header>
     {error && <div className="composerNotice">{error}</div>}
@@ -52,7 +52,7 @@ export default function StudioSetup(){
       <div><span className="miniLabel">LAUNCH PATH</span><h2>Database → news radar → first story.</h2></div>
       <ol>
         <li>Vercel must use <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code>. The older name <code>NEXT_SUPABASE_ANON_KEY</code> will not reach browser-side Supabase.</li>
-        <li>Add <code>NEWSAPI_AI_KEY</code> and <code>GEMINI_API_KEY</code>, redeploy, then confirm both readiness badges turn green.</li>
+        <li>Add <code>NEWSAPI_AI_KEY</code> and redeploy. Gemini is optional; MARS Radar can publish without AI.</li>
         <li>Open <Link href="/studio/login">Newsroom Login</Link>, create the first admin, then use <Link href="/studio/intake">News Intake</Link> to sync, triage and create the first draft.</li>
       </ol>
     </section>

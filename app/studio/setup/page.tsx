@@ -8,6 +8,8 @@ type Readiness={
   env:Record<string,boolean>;
   database:Record<string,boolean>|null;
   mediaBucket?:boolean;
+  publishingReady?:boolean;
+  automationReady?:boolean;
   ready:boolean;
 };
 
@@ -26,6 +28,8 @@ export default function StudioSetup(){
     ["NEXT_PUBLIC_SUPABASE_URL",data.env.supabaseUrl],
     ["NEXT_PUBLIC_SUPABASE_ANON_KEY",data.env.anonKey],
     ["SUPABASE_SERVICE_ROLE_KEY",data.env.serviceRole],
+    ["NEWSAPI_AI_KEY",data.env.newsApi],
+    ["GEMINI_API_KEY",data.env.gemini],
     ...Object.entries(data.database || {}).map(([name,ok])=>["Table: "+name,ok] as [string,boolean]),
     ["Storage: article-media",Boolean(data.mediaBucket)],
   ] : [];
@@ -33,7 +37,10 @@ export default function StudioSetup(){
   return <main className="studioPage">
     <header className="studioHeader">
       <div><span className="miniLabel">MARS NEWSROOM / LAUNCH CHECK</span><h1>Production readiness.</h1></div>
-      {data && <span className={"demoBadge "+(data.ready?"liveBadge":"")}>{data.ready?"READY":"SETUP REQUIRED"}</span>}
+      {data && <div className="readinessBadges">
+        <span className={"demoBadge "+(data.publishingReady?"liveBadge":"")}>{data.publishingReady?"PUBLISHING READY":"PUBLISHING SETUP"}</span>
+        <span className={"demoBadge "+(data.automationReady?"liveBadge":"")}>{data.automationReady?"NEWS AI READY":"NEWS AI SETUP"}</span>
+      </div>}
     </header>
     {error && <div className="composerNotice">{error}</div>}
     {!data && !error ? <div className="loadingStory">Checking MARS…</div> :
@@ -42,11 +49,11 @@ export default function StudioSetup(){
       </section>
     }
     <section className="setupInstructions">
-      <div><span className="miniLabel">TOMORROW</span><h2>Three steps to first publication.</h2></div>
+      <div><span className="miniLabel">LAUNCH PATH</span><h2>Database → news radar → first story.</h2></div>
       <ol>
-        <li>Run <code>20260922_init.sql</code> then <code>20260924_publishing.sql</code>.</li>
-        <li>Add the Supabase URL, anon key and service-role key in Vercel, then redeploy.</li>
-        <li>Open <Link href="/studio/login">Newsroom Login</Link>, create the first admin account, then publish from <Link href="/studio/articles/new">New Story</Link>.</li>
+        <li>Vercel must use <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code>. The older name <code>NEXT_SUPABASE_ANON_KEY</code> will not reach browser-side Supabase.</li>
+        <li>Add <code>NEWSAPI_AI_KEY</code> and <code>GEMINI_API_KEY</code>, redeploy, then confirm both readiness badges turn green.</li>
+        <li>Open <Link href="/studio/login">Newsroom Login</Link>, create the first admin, then use <Link href="/studio/intake">News Intake</Link> to sync, triage and create the first draft.</li>
       </ol>
     </section>
   </main>;

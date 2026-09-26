@@ -1,4 +1,5 @@
-export const sourceRegistry = [\n  { name: "NewsAPI.ai", type: "Discovery provider", coverage: "Global structured news discovery, concepts, categories and event signals", url: "https://newsapi.ai/" },
+export const sourceRegistry = [
+  { name: "NewsAPI.ai", type: "Discovery provider", coverage: "Global structured news discovery, concepts, categories and event signals", url: "https://newsapi.ai/" },
   { name: "FAO", type: "Multilateral", coverage: "Agriculture, food security, prices", url: "https://www.fao.org/newsroom/en" },
   { name: "World Food Programme", type: "Multilateral", coverage: "Food security, logistics, emergencies", url: "https://www.wfp.org/news" },
   { name: "World Bank", type: "Multilateral", coverage: "Trade, development, climate, agriculture", url: "https://www.worldbank.org/en/topic/agriculture" },

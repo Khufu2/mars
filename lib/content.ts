@@ -103,7 +103,8 @@ function mapDbArticle(row: DbArticle): PublishedArticle {
     metaTitle: row.meta_title || undefined,
     metaDescription: row.meta_description || undefined,
     sponsorName: row.sponsor_name || undefined,
-    sponsorDisclosure: row.sponsor_disclosure || undefined,\n    canonicalUrl: row.canonical_url || undefined,
+    sponsorDisclosure: row.sponsor_disclosure || undefined,
+    canonicalUrl: row.canonical_url || undefined,
     corrections: (row.corrections || [])
       .map(item => ({
         note: item.note || "",

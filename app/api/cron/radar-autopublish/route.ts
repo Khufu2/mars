@@ -14,14 +14,14 @@ const slots={
   morning:{
     label:"Agriculture & commodities",
     desk:"Markets",
-    topics:["agriculture","farming","crop","grain","maize","rice","wheat","coffee","tea","cocoa","sesame","cashew","sunflower","soybean","beans","avocado","fertilizer","irrigation","food security","harvest"],
-    geos:eastAfrica,
+    topics:["agriculture","crop","grain","maize","rice","coffee","fertilizer","food security","harvest"],
+    geos:["East Africa","Tanzania","Kenya","Uganda","Rwanda","Ethiopia"],
   },
   evening:{
     label:"Trade, logistics, climate & policy",
     desk:"Trade",
-    topics:["port","shipping","freight","corridor","customs","export","import","trade","logistics","container","rail","truck","drought","rainfall","flood","climate","weather","agriculture policy","food policy","tariff","agribusiness","agritech","farm finance"],
-    geos:widerAfrica,
+    topics:["trade","logistics","export","import","port","shipping","freight","climate","drought"],
+    geos:["Africa","Tanzania","Kenya","Uganda","South Africa","Nigeria"],
   },
 } as const;
 

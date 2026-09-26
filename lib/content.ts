@@ -30,20 +30,25 @@ type DbArticle = {
   meta_description?: string | null;
   sponsor_name?: string | null;
   sponsor_disclosure?: string | null;
+  canonical_url?: string | null;
   author?: DbAuthor | null;
   article_sources?: DbSource[] | null;
   corrections?: DbCorrection[] | null;
 };
 
+function publicAnonKey() {
+  return process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_SUPABASE_ANON_KEY || "";
+}
+
 export function hasSupabase() {
-  return Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+  return Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && publicAnonKey());
 }
 
 function publicClient() {
   if (!hasSupabase()) return null;
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    publicAnonKey(),
     { auth: { persistSession: false } }
   );
 }
@@ -71,6 +76,7 @@ export type PublishedArticle = Article & {
   metaDescription?: string;
   sponsorName?: string;
   sponsorDisclosure?: string;
+  canonicalUrl?: string;
   sources?: Array<{ name: string; url: string; note?: string; verified?: boolean }>;
   corrections?: Array<{ note: string; publishedAt?: string }>;
   isPrototype?: boolean;

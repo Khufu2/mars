@@ -60,7 +60,7 @@ export default function StudioPage() {
       </header>
 
       <section className="workflowGrid">
-        <Link className="workflowCard discovery" href="/studio/discover"><span>01</span><strong>Discover</strong><p>Find live leads across agriculture, trade, climate and logistics.</p></Link>
+        <Link className="workflowCard discovery" href="/studio/intake"><span>01</span><strong>Discover</strong><p>Sync NewsAPI.ai, rank leads with Gemini and turn the best signals into drafts.</p></Link>
         <div className="workflowArrow">→</div>
         <Link className="workflowCard verify" href="/sources"><span>02</span><strong>Verify</strong><p>Trace claims to primary documents, official data and attributable reporting.</p></Link>
         <div className="workflowArrow">→</div>
@@ -82,7 +82,7 @@ export default function StudioPage() {
           <h2>{mode==="live" ? "Your newsroom" : "Ready for tomorrow's database"}</h2>
         </div>
         <div className="toolbarActions">
-          <Link href="/studio/discover" className="secondaryButton">Discover leads</Link>
+          <Link href="/studio/intake" className="secondaryButton">News intake</Link>\n          <Link href="/studio/discover" className="secondaryButton">Web search</Link>
           <Link href="/studio/articles/new" className="primaryButton">New story</Link>
         </div>
       </section>

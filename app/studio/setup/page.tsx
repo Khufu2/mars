@@ -39,7 +39,8 @@ export default function StudioSetup(){
       <div><span className="miniLabel">MARS NEWSROOM / LAUNCH CHECK</span><h1>Production readiness.</h1></div>
       {data && <div className="readinessBadges">
         <span className={"demoBadge "+(data.publishingReady?"liveBadge":"")}>{data.publishingReady?"PUBLISHING READY":"PUBLISHING SETUP"}</span>
-        <span className={"demoBadge "+(data.radarReady?"liveBadge":"")}>{data.radarReady?"RADAR READY":"RADAR SETUP"}</span>\n        <span className={"demoBadge "+(data.automationReady?"liveBadge":"")}>{data.automationReady?"OPTIONAL AI READY":"AI OPTIONAL"}</span>
+        <span className={"demoBadge "+(data.radarReady?"liveBadge":"")}>{data.radarReady?"RADAR READY":"RADAR SETUP"}</span>
+        <span className={"demoBadge "+(data.automationReady?"liveBadge":"")}>{data.automationReady?"OPTIONAL AI READY":"AI OPTIONAL"}</span>
       </div>}
     </header>
     {error && <div className="composerNotice">{error}</div>}

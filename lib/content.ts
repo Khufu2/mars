@@ -30,20 +30,25 @@ type DbArticle = {
   meta_description?: string | null;
   sponsor_name?: string | null;
   sponsor_disclosure?: string | null;
+  canonical_url?: string | null;
   author?: DbAuthor | null;
   article_sources?: DbSource[] | null;
   corrections?: DbCorrection[] | null;
 };
 
+function publicAnonKey() {
+  return process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_SUPABASE_ANON_KEY || "";
+}
+
 export function hasSupabase() {
-  return Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+  return Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && publicAnonKey());
 }
 
 function publicClient() {
   if (!hasSupabase()) return null;
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    publicAnonKey(),
     { auth: { persistSession: false } }
   );
 }
@@ -71,6 +76,7 @@ export type PublishedArticle = Article & {
   metaDescription?: string;
   sponsorName?: string;
   sponsorDisclosure?: string;
+  canonicalUrl?: string;
   sources?: Array<{ name: string; url: string; note?: string; verified?: boolean }>;
   corrections?: Array<{ note: string; publishedAt?: string }>;
   isPrototype?: boolean;
@@ -104,6 +110,7 @@ function mapDbArticle(row: DbArticle): PublishedArticle {
     metaDescription: row.meta_description || undefined,
     sponsorName: row.sponsor_name || undefined,
     sponsorDisclosure: row.sponsor_disclosure || undefined,
+    canonicalUrl: row.canonical_url || undefined,
     corrections: (row.corrections || [])
       .map(item => ({
         note: item.note || "",
@@ -127,7 +134,7 @@ function mapDbArticle(row: DbArticle): PublishedArticle {
 const select = [
   "id","slug","title","dek","kicker","body","section","region","country","commodity","story_type",
   "featured_image_url","image_credit","published_at","updated_at","meta_title","meta_description",
-  "sponsor_name","sponsor_disclosure","author:authors(name)",
+  "sponsor_name","sponsor_disclosure","canonical_url","author:authors(name)",
   "article_sources(source_url,note,verified,source:sources(name,url,source_type))",
   "corrections(note,published_at)"
 ].join(",");

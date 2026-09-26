@@ -103,7 +103,7 @@ function mapDbArticle(row: DbArticle): PublishedArticle {
     metaTitle: row.meta_title || undefined,
     metaDescription: row.meta_description || undefined,
     sponsorName: row.sponsor_name || undefined,
-    sponsorDisclosure: row.sponsor_disclosure || undefined,
+    sponsorDisclosure: row.sponsor_disclosure || undefined,\n    canonicalUrl: row.canonical_url || undefined,
     corrections: (row.corrections || [])
       .map(item => ({
         note: item.note || "",
@@ -127,7 +127,7 @@ function mapDbArticle(row: DbArticle): PublishedArticle {
 const select = [
   "id","slug","title","dek","kicker","body","section","region","country","commodity","story_type",
   "featured_image_url","image_credit","published_at","updated_at","meta_title","meta_description",
-  "sponsor_name","sponsor_disclosure","author:authors(name)",
+  "sponsor_name","sponsor_disclosure","canonical_url","author:authors(name)",
   "article_sources(source_url,note,verified,source:sources(name,url,source_type))",
   "corrections(note,published_at)"
 ].join(",");

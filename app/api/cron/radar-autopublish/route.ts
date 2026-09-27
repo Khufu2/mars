@@ -145,6 +145,7 @@ export async function POST(request:NextRequest){
       throw new Error("Unexpected NewsAPI.ai response: "+JSON.stringify(payload).slice(0,500));
     }
     const results=payload.articles.results;
+    const publishable=results.filter(isFoodEconomyRelevant);
     const authorId=await ensureRadarAuthor(client);
     const siteUrl=process.env.NEXT_PUBLIC_SITE_URL || "https://mars-rust.vercel.app";
     let published=0,duplicates=0,failed=0;

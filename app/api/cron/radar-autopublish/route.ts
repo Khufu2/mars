@@ -33,6 +33,24 @@ function authorized(request:NextRequest){
 
 function keywordOr(terms:readonly string[]){return {keyword:{"$or":[...terms]}};}
 
+function metadataText(item:any){
+  const concepts=Array.isArray(item?.concepts)?item.concepts.map((x:any)=>x?.label?.eng||x?.label||x?.uri||"").join(" "):"";
+  const categories=Array.isArray(item?.categories)?item.categories.map((x:any)=>x?.label||x?.uri||"").join(" "):"";
+  return (String(item?.title||"")+" "+concepts+" "+categories).toLowerCase();
+}
+
+function isFoodEconomyRelevant(item:any){
+  const text=metadataText(item);
+  const anchors=[
+    "agriculture","agricultural","farm","farmer","farming","crop","grain","cereal","maize","corn","rice","wheat",
+    "coffee","tea","cocoa","sesame","cashew","sunflower","soy","bean","avocado","fertilizer","food security",
+    "food prices","food production","livestock","dairy","fishery","fisheries","sugar","cotton","harvest",
+    "irrigation","commodity","agribusiness","agritech","agrochemical","horticulture","palm oil","edible oil"
+  ];
+  const excluded=["crime, law and justice","sports","travel and tourism","arts and entertainment","cocaine","narcotic"];
+  return anchors.some(term=>text.includes(term)) && !excluded.some(term=>text.includes(term));
+}
+
 function classify(title:string,slot:"morning"|"evening"){
   const text=title.toLowerCase();
   const has=(terms:string[])=>terms.some(term=>text.includes(term));
@@ -131,7 +149,7 @@ export async function POST(request:NextRequest){
     const siteUrl=process.env.NEXT_PUBLIC_SITE_URL || "https://mars-rust.vercel.app";
     let published=0,duplicates=0,failed=0;
 
-    for(const item of results){
+    for(const item of publishable){
       if(!item?.url||!item?.title){failed++;continue;}
       const externalId=String(item.uri||item.url);
       const {data:known}=await client.from("news_candidates").select("id,article_id").eq("provider","newsapi.ai").eq("external_id",externalId).maybeSingle();
@@ -193,7 +211,7 @@ export async function POST(request:NextRequest){
       status:"completed",items_fetched:results.length,items_upserted:published,finished_at:new Date().toISOString()
     }).eq("id",run.id);
 
-    return NextResponse.json({ok:true,slot,label:config.label,fetched:results.length,published,duplicates,failed,searchesUsed:1});
+    return NextResponse.json({ok:true,slot,label:config.label,fetched:results.length,relevant:publishable.length,published,duplicates,failed,searchesUsed:1});
   }catch(error){
     const message=error instanceof Error?error.message:"Radar sync failed";
     await client.from("ingestion_runs").update({status:"failed",error:message,finished_at:new Date().toISOString()}).eq("id",run.id);

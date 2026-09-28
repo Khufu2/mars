@@ -7,23 +7,11 @@ export const maxDuration=60;
 
 const EXPECTED_HASH="a64a0f88aef74d217a83da17bc5a1018fd67988655f8e5006abaf46d8e255d0b";
 
-const eastAfrica=["Africa","Tanzania","Kenya","Uganda","Rwanda","Burundi","Ethiopia","South Sudan","Zanzibar"];
-const widerAfrica=[...eastAfrica,"Zambia","Malawi","Mozambique","Ghana","Nigeria","South Africa","Zimbabwe","Botswana","Namibia","Angola","Côte d'Ivoire","Senegal","Cameroon"];
-
-const slots={
-  morning:{
-    label:"Agriculture & commodities",
-    desk:"Markets",
-    topics:["agriculture","crop","grain","maize","rice","coffee","fertilizer"],
-    geos:["Tanzania","Kenya","Uganda","Rwanda","Ethiopia"],
-  },
-  evening:{
-    label:"Trade, logistics, climate & policy",
-    desk:"Trade",
-    topics:["trade","logistics","export","port","shipping","climate","drought"],
-    geos:["Africa","Tanzania","Kenya","Uganda","Nigeria"],
-  },
-} as const;
+const africaTerms=[
+  "africa","tanzania","kenya","uganda","rwanda","burundi","ethiopia","south sudan",
+  "zambia","malawi","mozambique","ghana","nigeria","south africa","zimbabwe","botswana",
+  "namibia","angola","senegal","cameroon","côte d'ivoire","ivory coast","djibouti"
+];
 
 function authorized(request:NextRequest){
   const token=request.headers.get("x-mars-cron") || "";
@@ -36,56 +24,80 @@ function keywordOr(terms:readonly string[]){return {keyword:{"$or":[...terms]}};
 function metadataText(item:any){
   const concepts=Array.isArray(item?.concepts)?item.concepts.map((x:any)=>x?.label?.eng||x?.label||x?.uri||"").join(" "):"";
   const categories=Array.isArray(item?.categories)?item.categories.map((x:any)=>x?.label||x?.uri||"").join(" "):"";
-  return (String(item?.title||"")+" "+concepts+" "+categories).toLowerCase();
+  return (String(item?.title||"")+" "+String(item?.body||"")+" "+concepts+" "+categories).toLowerCase();
 }
 
-function isFoodEconomyRelevant(item:any){
+function isBusinessRelevant(item:any){
   const text=metadataText(item);
-  const anchors=[
-    "agriculture","agricultural","farm","farmer","farming","crop","grain","cereal","maize","corn","rice","wheat",
-    "coffee","tea","cocoa","sesame","cashew","sunflower","soy","bean","avocado","fertilizer","food security",
-    "food prices","food production","livestock","dairy","fishery","fisheries","sugar","cotton","harvest",
-    "irrigation","commodity","agribusiness","agritech","agrochemical","horticulture","palm oil","edible oil"
+  const categoryBusiness=
+    text.includes("news/business") ||
+    text.includes("economy, business and finance") ||
+    text.includes("dmoz/business");
+  const strategic=[
+    "agriculture","agricultural","farm","farmer","farming","crop","grain","commodity",
+    "maize","rice","wheat","coffee","tea","cocoa","fertilizer","food security","food prices",
+    "agribusiness","agritech","shipping","freight","port","logistics","supply chain","container",
+    "export","import","trade","tariff","climate","drought","flood","energy","mining","finance",
+    "banking","investment","merger","acquisition","company","manufacturing","factory","startup"
   ];
-  const excluded=["crime, law and justice","sports","travel and tourism","arts and entertainment","cocaine","narcotic"];
-  return anchors.some(term=>text.includes(term)) && !excluded.some(term=>text.includes(term));
+  const excluded=[
+    "crime, law and justice","sports","arts and entertainment","celebrity","cocaine","narcotic",
+    "murder","wedding","football","basketball"
+  ];
+  return (categoryBusiness || strategic.some(term=>text.includes(term))) &&
+    !excluded.some(term=>text.includes(term));
 }
 
-function classify(title:string,slot:"morning"|"evening"){
-  const text=title.toLowerCase();
-  const has=(terms:string[])=>terms.some(term=>text.includes(term));
-  let section:string=slots[slot].desk;
-  if(has(["drought","rain","flood","climate","weather","heat","el niño","la niña"])) section="Climate";
-  else if(has(["port","shipping","freight","corridor","container","rail","truck","logistics"])) section="Logistics";
-  else if(has(["export","import","trade","customs","tariff","border"])) section="Trade";
-  else if(has(["policy","regulation","ban","ministry","government","law","duty"])) section="Policy";
-  else if(has(["finance","bank","funding","investment","credit","loan"])) section="Finance";
-  else if(has(["agritech","technology","satellite","drone","digital"])) section="Technology";
-  else if(has(["company","acquisition","factory","processor","processing"])) section="Companies";
+function inferRegion(item:any){
+  const text=metadataText(item);
+  return africaTerms.some(term=>text.includes(term)) ? "Africa" : "Global";
+}
 
-  const commodities=["maize","corn","rice","wheat","coffee","tea","cocoa","sesame","cashew","sunflower","soybean","soy","beans","avocado","fertilizer","sugar","cotton","tobacco"];
+function classify(item:any){
+  const text=metadataText(item);
+  const has=(terms:string[])=>terms.some(term=>text.includes(term));
+  let section="Companies";
+  if(has(["drought","rainfall","flood","climate","weather","heatwave","el niño","la niña","carbon"])) section="Climate";
+  else if(has(["port","shipping","freight","corridor","container","rail","truck","logistics","supply chain"])) section="Logistics";
+  else if(has(["export","import","trade","customs","tariff","border","afcfta"])) section="Trade";
+  else if(has(["policy","regulation","ban","ministry","government","law","duty","central bank"])) section="Policy";
+  else if(has(["finance","bank","funding","investment","credit","loan","bond","currency","inflation","interest rate"])) section="Finance";
+  else if(has(["agriculture","farm","crop","grain","commodity","fertilizer","food price","harvest"])) section="Markets";
+  else if(has(["agritech","technology","satellite","drone","digital","ai ","artificial intelligence"])) section="Technology";
+
+  const commodities=["maize","corn","rice","wheat","coffee","tea","cocoa","sesame","cashew","sunflower","soybean","soy","beans","avocado","fertilizer","sugar","cotton","tobacco","palm oil"];
   const commodity=commodities.find(item=>text.includes(item)) || null;
   return {section,commodity};
 }
 
-function sourceBrief(source:string,section:string,region:string,commodity:string|null,publishedAt:string|null){
+function cleanExcerpt(value:any,max=900){
+  const text=String(value||"").replace(/\s+/g," ").trim();
+  if(!text) return "";
+  if(text.length<=max) return text;
+  const clipped=text.slice(0,max);
+  const stop=Math.max(clipped.lastIndexOf(". "),clipped.lastIndexOf("! "),clipped.lastIndexOf("? "));
+  return (stop>320?clipped.slice(0,stop+1):clipped.trimEnd()+"…");
+}
+
+function sourceBrief(source:string,section:string,region:string,commodity:string|null,publishedAt:string|null,excerpt:string){
   const when=publishedAt ? new Intl.DateTimeFormat("en",{dateStyle:"medium"}).format(new Date(publishedAt)) : "recently";
   const subject=commodity ? commodity+" markets" : section.toLowerCase();
-  return {
-    dek:"MARS Radar surfaced this "+subject+" development from "+source+" "+when+". Open the original report for full context.",
-    body:[
-      {eyebrow:"MARS RADAR",title:"Source brief",body:["This item was automatically surfaced by MARS from "+source+". It matched our monitoring for "+section.toLowerCase()+" developments affecting "+region+"."]},
-      {eyebrow:"WHY IT'S HERE",title:"Signal, not a rewrite",body:["MARS Radar publishes source-linked signals quickly without copying the underlying report. The original publisher remains the source of record for the reporting and details."]},
-      {eyebrow:"SOURCE",title:"Read the original",body:["Use the source link below for the full report, attribution, figures and context."]},
-      {eyebrow:"WATCH",title:"What MARS tracks next",body:["MARS will continue monitoring follow-on market, climate, trade, logistics and policy developments around this signal."]},
-    ]
-  };
+  const dek=excerpt
+    ? cleanExcerpt(excerpt,260)
+    : "MARS Radar surfaced this "+subject+" development from "+source+" "+when+".";
+  const body=[
+    {eyebrow:"MARS RADAR",title:"What happened",body:[dek]},
+    ...(excerpt ? [{eyebrow:"FROM THE REPORT",title:"Source extract",body:[cleanExcerpt(excerpt,900)]}] : []),
+    {eyebrow:"WHY IT'S HERE",title:"Business signal",body:["This item matched MARS monitoring for "+section.toLowerCase()+" developments affecting "+region+". MARS Radar surfaces the signal quickly and keeps the original publisher as the source of record."]},
+    {eyebrow:"SOURCE",title:"Read the full original",body:["Use the original-source link below for the complete report, attribution, figures and context."]},
+  ];
+  return {dek,body};
 }
 
 async function ensureRadarAuthor(client:any){
   const {data:existing}=await client.from("authors").select("id").eq("slug","mars-radar").maybeSingle();
   if(existing?.id) return existing.id;
-  const {data,error}=await client.from("authors").insert({name:"MARS Radar",slug:"mars-radar",bio:"Automated source-linked news radar for Africa's food economy."}).select("id").single();
+  const {data,error}=await client.from("authors").insert({name:"MARS Radar",slug:"mars-radar",bio:"Automated source-linked business and food-economy radar."}).select("id").single();
   if(error) throw error;
   return data.id;
 }
@@ -105,14 +117,20 @@ export async function POST(request:NextRequest){
   const apiKey=process.env.NEWSAPI_AI_KEY;
   if(!apiKey) return NextResponse.json({error:"NEWSAPI_AI_KEY is missing in Vercel."},{status:503});
 
-  const body=await request.json().catch(()=>({}));
-  const slot=(body.slot==="morning"||body.slot==="evening"?body.slot:"morning") as "morning"|"evening";
-  const config=slots[slot];
-  const query={"$query":{"$and":[keywordOr(config.topics),keywordOr(config.geos)]},"$filter":{"isDuplicate":"skipDuplicates"}};
+  const query={
+    "$query":{
+      "$or":[
+        {"categoryUri":"dmoz/Business"},
+        {"categoryUri":"dmoz/Science/Agriculture"},
+        keywordOr(["shipping","logistics","commodity","agriculture","climate"])
+      ]
+    },
+    "$filter":{"isDuplicate":"skipDuplicates"}
+  };
   const startedAt=new Date().toISOString();
 
   const {data:run,error:runError}=await client.from("ingestion_runs").insert({
-    provider:"newsapi.ai",pipeline:"radar-"+slot,query,status:"running",estimated_searches:1,started_at:startedAt
+    provider:"newsapi.ai",pipeline:"radar-daily-business",query,status:"running",estimated_searches:1,started_at:startedAt
   }).select("id").single();
   if(runError) return NextResponse.json({error:runError.message},{status:500});
 
@@ -128,15 +146,19 @@ export async function POST(request:NextRequest){
         articlesCount:100,
         articlesSortBy:"date",
         articlesSortByAsc:false,
-        articlesArticleBodyLen:0,
+        articlesArticleBodyLen:1200,
         includeArticleCategories:true,
         includeArticleConcepts:true,
         includeArticleLocation:true,
-        includeArticleImage:false,
+        includeArticleImage:true,
+        dataType:["news","pr"],
+        lang:["eng"],
+        forceMaxDataTimeWindow:7,
         apiKey,
       }),
       cache:"no-store",
     });
+
     const raw=await response.text();
     if(!response.ok) throw new Error("NewsAPI.ai returned "+response.status+": "+raw.slice(0,400));
     const payload=JSON.parse(raw);
@@ -144,8 +166,9 @@ export async function POST(request:NextRequest){
     if(!payload?.articles || !Array.isArray(payload.articles.results)) {
       throw new Error("Unexpected NewsAPI.ai response: "+JSON.stringify(payload).slice(0,500));
     }
+
     const results=payload.articles.results;
-    const publishable=results.filter(isFoodEconomyRelevant);
+    const publishable=results.filter(isBusinessRelevant);
     const authorId=await ensureRadarAuthor(client);
     const siteUrl=process.env.NEXT_PUBLIC_SITE_URL || "https://mars-rust.vercel.app";
     let published=0,duplicates=0,failed=0;
@@ -158,16 +181,18 @@ export async function POST(request:NextRequest){
 
       const source=String(item?.source?.title||item?.source?.uri||"News source").slice(0,300);
       const publishedAt=item.dateTimePub||item.dateTime||item.date||null;
-      const {section,commodity}=classify(String(item.title),slot);
-      const region=slot==="morning"?"East Africa":"Africa";
+      const {section,commodity}=classify(item);
+      const region=inferRegion(item);
       const slug=slugify(String(item.title))+"-"+createHash("sha1").update(externalId).digest("hex").slice(0,8);
-      const brief=sourceBrief(source,section,region,commodity,publishedAt);
-      const hero=siteUrl+"/api/social/card?slug="+encodeURIComponent(slug)+"&slide=1";
+      const excerpt=cleanExcerpt(item.body,1200);
+      const brief=sourceBrief(source,section,region,commodity,publishedAt,excerpt);
+      const imageUrl=item.image ? String(item.image) : null;
+      const hero=imageUrl || siteUrl+"/api/social/card?slug="+encodeURIComponent(slug)+"&slide=1";
 
       const candidatePayload={
-        provider:"newsapi.ai",external_id:externalId,pipeline:"radar-"+slot,title:String(item.title).slice(0,1000),
+        provider:"newsapi.ai",external_id:externalId,pipeline:"radar-daily-business",title:String(item.title).slice(0,1000),
         url:String(item.url),source_name:source,source_uri:item?.source?.uri?String(item.source.uri):null,
-        published_at:publishedAt,language:item.lang?String(item.lang):null,body_excerpt:null,
+        published_at:publishedAt,image_url:imageUrl,language:item.lang?String(item.lang):null,body_excerpt:excerpt||null,
         categories:Array.isArray(item.categories)?item.categories.slice(0,20):[],
         concepts:Array.isArray(item.concepts)?item.concepts.slice(0,20):[],
         locations:item.location?[item.location]:[],
@@ -184,8 +209,8 @@ export async function POST(request:NextRequest){
 
       const articlePayload={
         slug,title:String(item.title).slice(0,1000),dek:brief.dek,kicker:"MARS RADAR",body:brief.body,
-        section,region,country:"Regional",commodity,story_type:"Radar",status:"published",
-        featured_image_url:hero,image_credit:"MARS Radar",
+        section,region,country:region==="Africa"?"Regional":"Global",commodity,story_type:"Radar",status:"published",
+        featured_image_url:hero,image_credit:imageUrl ? "Image via "+source : "MARS Radar",
         meta_title:String(item.title).slice(0,65),meta_description:brief.dek.slice(0,165),
         social_copy:{},editorial_checks:{automatedRadar:true},include_in_brief:false,
         canonical_url:String(item.url),author_id:authorId,published_at:new Date().toISOString(),
@@ -197,13 +222,13 @@ export async function POST(request:NextRequest){
       const sid=await sourceId(client,source,String(item.url));
       await client.from("article_sources").insert({
         article_id:article.id,source_id:sid,source_url:String(item.url),
-        note:"Original reporting surfaced by MARS Radar. This automated brief links to the publisher rather than reproducing the article.",
+        note:"Original reporting surfaced by MARS Radar. The source extract is limited; open the publisher for the complete article.",
         verified:false,
       });
       await client.from("news_candidates").update({article_id:article.id,status:"used",updated_at:new Date().toISOString()}).eq("id",candidateId);
       await client.from("publication_events").insert({
         article_id:article.id,event_type:"radar_autopublished",
-        payload:{candidate_id:candidateId,provider:"newsapi.ai",slot,source_url:String(item.url)}
+        payload:{candidate_id:candidateId,provider:"newsapi.ai",pipeline:"daily-business",source_url:String(item.url)}
       });
       published++;
     }
@@ -212,7 +237,10 @@ export async function POST(request:NextRequest){
       status:"completed",items_fetched:results.length,items_upserted:published,finished_at:new Date().toISOString()
     }).eq("id",run.id);
 
-    return NextResponse.json({ok:true,slot,label:config.label,fetched:results.length,relevant:publishable.length,published,duplicates,failed,searchesUsed:1});
+    return NextResponse.json({
+      ok:true,pipeline:"daily-business",fetched:results.length,relevant:publishable.length,
+      published,duplicates,failed,searchesUsed:1
+    });
   }catch(error){
     const message=error instanceof Error?error.message:"Radar sync failed";
     await client.from("ingestion_runs").update({status:"failed",error:message,finished_at:new Date().toISOString()}).eq("id",run.id);

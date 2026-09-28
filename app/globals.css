@@ -1,6 +1,6 @@
 :root{
-  --ink:#1F1D1A;--paper:#FFFAEB;--off:#F8F5D7;--line:#1F1D1A;--muted:#53524C;
-  --orange:#C07D38;--yellow:#F2EFA4;--blue:#3A6D78;--lav:#D6C8E8;--mint:#D8E98A;--rose:#E7B7A8;--white:#FFFDF7;--hairline:#CBC9C0;
+  --ink:#20211E;--paper:#F3F1EA;--off:#E8E5DC;--line:#2A2A27;--muted:#66655F;
+  --orange:#B46D43;--yellow:#D8CEA6;--blue:#536B70;--lav:#C7C0D1;--mint:#B8C49F;--rose:#D0AAA0;--white:#FAF9F5;--hairline:#C8C4BA;
   --serif:Georgia,"Times New Roman",serif;--sans:Arial,Helvetica,sans-serif;
 }
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.4}
@@ -84,13 +84,13 @@ a{color:inherit;text-decoration:none}img{display:block;width:100%}button,input,t
 
 /* Recurring MARS Brief gate */
 .newsletterHoney{position:absolute!important;left:-10000px!important;width:1px!important;height:1px!important;opacity:0!important;pointer-events:none!important}
-.newsletterGateBackdrop{position:fixed;inset:0;z-index:120;background:rgba(31,29,26,.18);backdrop-filter:blur(4px);display:grid;place-items:center;padding:22px}
-.newsletterGate{position:relative;width:min(720px,100%);max-height:calc(100vh - 44px);overflow:auto;background:var(--paper);border:1.5px solid var(--line);box-shadow:0 24px 80px rgba(31,29,26,.22);padding:30px 32px 28px}
+.newsletterGateBackdrop{position:fixed;inset:0;z-index:120;background:rgba(32,33,30,.18);backdrop-filter:blur(4px);display:grid;place-items:center;padding:22px}
+.newsletterGate{position:relative;width:min(720px,100%);max-height:calc(100vh - 44px);overflow:auto;background:var(--paper);border:1.5px solid var(--line);box-shadow:0 24px 80px rgba(32,33,30,.22);padding:30px 32px 28px}
 .newsletterGateClose{position:absolute;right:18px;top:14px;width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:var(--ink);color:var(--paper);font-size:25px;line-height:1}
 .newsletterGateRule{border-top:2px dashed var(--line);margin:32px 0 24px}
 .newsletterGateHeading{display:grid;grid-template-columns:1fr auto;gap:24px;align-items:start}.newsletterGateHeading h2{font-family:var(--serif);font-size:clamp(48px,6vw,72px);line-height:.95;letter-spacing:-.05em;margin:8px 0 0;max-width:11ch}.gateOrb{font-family:var(--serif);font-size:46px;line-height:1}
 .newsletterGateDek{font-family:var(--serif);font-size:22px;line-height:1.28;max-width:34ch;margin:22px 0 26px}
-.newsletterGateForm>label{display:inline-block;background:#F6F000;padding:4px 7px 3px;font-size:13px;font-weight:900;margin-bottom:0}.newsletterGateInput{height:62px;border:1.5px solid var(--line);display:grid;grid-template-columns:52px 1fr;align-items:center;background:var(--paper);margin-bottom:22px}.newsletterGateInput>span{display:grid;place-items:center;font-size:21px}.newsletterGateInput input{height:100%;border:0;background:transparent;padding:0 12px 0 0;font-family:var(--serif);font-size:21px;outline:0;color:var(--ink)}.newsletterGateInput input::placeholder{color:#99958c}.newsletterGateSubmit{width:100%;min-height:64px;border:1.5px solid var(--line);background:var(--ink);color:var(--paper);font-family:var(--serif);font-size:25px}.newsletterGateMessage{font-size:12px;font-weight:800;margin:12px 0 0}.newsletterGateMessage.error{color:#9d1c1c}
+.newsletterGateForm>label{display:inline-block;background:var(--yellow);padding:4px 7px 3px;font-size:13px;font-weight:900;margin-bottom:0}.newsletterGateInput{height:62px;border:1.5px solid var(--line);display:grid;grid-template-columns:52px 1fr;align-items:center;background:var(--paper);margin-bottom:22px}.newsletterGateInput>span{display:grid;place-items:center;font-size:21px}.newsletterGateInput input{height:100%;border:0;background:transparent;padding:0 12px 0 0;font-family:var(--serif);font-size:21px;outline:0;color:var(--ink)}.newsletterGateInput input::placeholder{color:#99958c}.newsletterGateSubmit{width:100%;min-height:64px;border:1.5px solid var(--line);background:var(--ink);color:var(--paper);font-family:var(--serif);font-size:25px}.newsletterGateMessage{font-size:12px;font-weight:800;margin:12px 0 0}.newsletterGateMessage.error{color:#9d1c1c}
 .newsletterGateExisting,.newsletterGateBack{width:100%;border:0;background:transparent;color:var(--ink)}.newsletterGateExisting{margin-top:18px;padding:15px 8px;border-top:1px dashed var(--line);border-bottom:1px solid var(--line);font-size:13px;text-decoration:underline;text-underline-offset:3px}.newsletterGateBack{font-family:var(--serif);font-size:21px;padding:24px 8px 4px}
 
 /* Corrections, launch diagnostics, newsroom actions */
@@ -101,7 +101,7 @@ a{color:inherit;text-decoration:none}img{display:block;width:100%}button,input,t
 .setupInstructions{margin-top:42px;background:var(--off);border:1px solid var(--line);padding:26px;display:grid;grid-template-columns:.8fr 1.2fr;gap:30px}.setupInstructions h2{font-family:var(--serif);font-size:39px;line-height:1;margin:8px 0}.setupInstructions ol{margin:0;padding-left:22px}.setupInstructions li{padding:8px 0}.setupInstructions code{font-size:12px;background:var(--paper);padding:3px 5px}.setupInstructions a{text-decoration:underline;font-weight:900}
 @media(max-width:720px){
   .newsletterGateBackdrop{align-items:end;padding:0}
-  .newsletterGate{width:100%;max-height:91vh;border-left:0;border-right:0;border-bottom:0;padding:22px 18px 24px;box-shadow:0 -18px 60px rgba(31,29,26,.2)}
+  .newsletterGate{width:100%;max-height:91vh;border-left:0;border-right:0;border-bottom:0;padding:22px 18px 24px;box-shadow:0 -18px 60px rgba(32,33,30,.2)}
   .newsletterGateRule{margin:30px 0 20px}.newsletterGateHeading h2{font-size:52px}.newsletterGateDek{font-size:20px}.newsletterGateInput{height:58px}.newsletterGateSubmit{min-height:60px;font-size:23px}.newsletterGateBack{font-size:20px}
   .setupInstructions{grid-template-columns:1fr}.correctionsBox>div{grid-template-columns:1fr;gap:4px}
 }
@@ -122,3 +122,13 @@ a{color:inherit;text-decoration:none}img{display:block;width:100%}button,input,t
 /* Auto-published MARS Radar source briefs */
 .radarDisclosure{display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center;background:var(--yellow);border:1px solid var(--line);padding:11px 13px;margin-bottom:14px}.radarDisclosure strong{font-size:10px;text-transform:uppercase;letter-spacing:.08em}.radarDisclosure span{font-size:11px;line-height:1.35}.radarDisclosure a{font-size:10px;font-weight:900;text-decoration:underline;text-underline-offset:3px;white-space:nowrap}
 @media(max-width:720px){.radarDisclosure{grid-template-columns:1fr;gap:6px}.radarDisclosure a{white-space:normal}}
+
+/* MARS satin palette refinements */
+body{background-image:linear-gradient(rgba(255,255,255,.12),rgba(255,255,255,.12));}
+.briefCta{background:var(--orange);color:var(--white)}
+.marsOrb span{background:var(--orange)}
+.glanceBody .africaPanel{background:#4D6669}
+.partnerContact{background:#4D6669}
+.radarDisclosure{background:var(--off);border-left:5px solid var(--orange)}
+.articleFigure{background:var(--off)}
+.articleFigure img{max-height:720px;object-fit:cover}

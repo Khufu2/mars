@@ -21,31 +21,62 @@ function authorized(request:NextRequest){
 
 function keywordOr(terms:readonly string[]){return {keyword:{"$or":[...terms]}};}
 
-function metadataText(item:any){
-  const concepts=Array.isArray(item?.concepts)?item.concepts.map((x:any)=>x?.label?.eng||x?.label||x?.uri||"").join(" "):"";
-  const categories=Array.isArray(item?.categories)?item.categories.map((x:any)=>x?.label||x?.uri||"").join(" "):"";
-  return (String(item?.title||"")+" "+String(item?.body||"")+" "+concepts+" "+categories).toLowerCase();
+function categoryText(item:any){
+  return Array.isArray(item?.categories)
+    ? item.categories.map((x:any)=>x?.label||x?.uri||"").join(" ").toLowerCase()
+    : "";
 }
 
+function conceptText(item:any){
+  return Array.isArray(item?.concepts)
+    ? item.concepts.map((x:any)=>x?.label?.eng||x?.label||x?.uri||"").join(" ").toLowerCase()
+    : "";
+}
+
+function metadataText(item:any){
+  return (String(item?.title||"")+" "+conceptText(item)+" "+categoryText(item)).toLowerCase();
+}
+
+const strongBusinessTerms=[
+  "business","market","markets","economy","economic","finance","financial","bank","banking","investment",
+  "investor","funding","fund","company","corporate","startup","merger","acquisition","revenue","profit",
+  "earnings","manufacturing","factory","industry","industrial","trade","export","import","tariff","tax",
+  "budget","shipping","freight","port","logistics","supply chain","container","agriculture","agricultural",
+  "farm","farmer","crop","grain","commodity","maize","rice","wheat","coffee","tea","cocoa","fertilizer",
+  "food price","food security","agribusiness","agritech","energy","oil","gas","mining","currency",
+  "inflation","interest rate","climate","drought","flood"
+];
+
 function isBusinessRelevant(item:any){
-  const text=metadataText(item);
+  const title=String(item?.title||"").toLowerCase();
+  const categories=categoryText(item);
+  const concepts=conceptText(item);
+  const metadata=(title+" "+concepts+" "+categories).toLowerCase();
+
   const categoryBusiness=
-    text.includes("news/business") ||
-    text.includes("economy, business and finance") ||
-    text.includes("dmoz/business");
-  const strategic=[
-    "agriculture","agricultural","farm","farmer","farming","crop","grain","commodity",
-    "maize","rice","wheat","coffee","tea","cocoa","fertilizer","food security","food prices",
-    "agribusiness","agritech","shipping","freight","port","logistics","supply chain","container",
-    "export","import","trade","tariff","climate","drought","flood","energy","mining","finance",
-    "banking","investment","merger","acquisition","company","manufacturing","factory","startup"
-  ];
-  const excluded=[
-    "crime, law and justice","sports","arts and entertainment","celebrity","cocaine","narcotic",
-    "murder","wedding","football","basketball"
-  ];
-  return (categoryBusiness || strategic.some(term=>text.includes(term))) &&
-    !excluded.some(term=>text.includes(term));
+    categories.includes("news/business") ||
+    categories.includes("economy, business and finance") ||
+    categories.includes("dmoz/business");
+
+  const directTitle=strongBusinessTerms.some(term=>title.includes(term));
+  const strategicMetadata=[
+    "agriculture","agricultural","commodity","shipping","freight","logistics","supply chain",
+    "port","export","import","trade","finance","investment","manufacturing","energy","mining"
+  ].some(term=>metadata.includes(term));
+
+  const excludedCategory=[
+    "crime, law and justice","sports","arts and entertainment","travel and tourism",
+    "religion and belief","conflict, war and peace","politics and government"
+  ].some(term=>categories.includes(term));
+
+  const promotional=[
+    "presale","price prediction","airdrop","buy now","token sale","sponsored content",
+    "best crypto to buy","next 100x","meme coin"
+  ].some(term=>title.includes(term));
+
+  if(promotional) return false;
+  if(excludedCategory && !directTitle) return false;
+  return categoryBusiness || directTitle || strategicMetadata;
 }
 
 function inferRegion(item:any){
@@ -54,19 +85,36 @@ function inferRegion(item:any){
 }
 
 function classify(item:any){
-  const text=metadataText(item);
-  const has=(terms:string[])=>terms.some(term=>text.includes(term));
+  const title=String(item?.title||"").toLowerCase();
+  const metadata=metadataText(item);
+  const has=(text:string,terms:string[])=>terms.some(term=>text.includes(term));
+
+  const finance=["finance","financial","bank","funding","investment","credit","loan","bond","currency","inflation","interest rate","budget","tax"];
+  const logistics=["port","shipping","freight","corridor","container","rail","truck","logistics","supply chain","maritime"];
+  const trade=["export","import","trade","customs","tariff","border","afcfta"];
+  const markets=["agriculture","farm","crop","grain","commodity","fertilizer","food price","harvest","maize","rice","wheat","coffee","cocoa"];
+  const climate=["drought","rainfall","flood","climate","weather","heatwave","el niño","la niña","carbon"];
+  const policy=["policy","regulation","ban","ministry","government","law","duty"];
+  const technology=["agritech","technology","satellite","drone","digital","artificial intelligence"," ai "];
+
   let section="Companies";
-  if(has(["drought","rainfall","flood","climate","weather","heatwave","el niño","la niña","carbon"])) section="Climate";
-  else if(has(["port","shipping","freight","corridor","container","rail","truck","logistics","supply chain"])) section="Logistics";
-  else if(has(["export","import","trade","customs","tariff","border","afcfta"])) section="Trade";
-  else if(has(["policy","regulation","ban","ministry","government","law","duty","central bank"])) section="Policy";
-  else if(has(["finance","bank","funding","investment","credit","loan","bond","currency","inflation","interest rate"])) section="Finance";
-  else if(has(["agriculture","farm","crop","grain","commodity","fertilizer","food price","harvest"])) section="Markets";
-  else if(has(["agritech","technology","satellite","drone","digital","ai ","artificial intelligence"])) section="Technology";
+  if(has(title,finance)) section="Finance";
+  else if(has(title,logistics)) section="Logistics";
+  else if(has(title,trade)) section="Trade";
+  else if(has(title,markets)) section="Markets";
+  else if(has(title,climate)) section="Climate";
+  else if(has(title,technology)) section="Technology";
+  else if(has(title,policy)) section="Policy";
+  else if(has(metadata,finance)) section="Finance";
+  else if(has(metadata,logistics)) section="Logistics";
+  else if(has(metadata,trade)) section="Trade";
+  else if(has(metadata,markets)) section="Markets";
+  else if(has(metadata,climate)) section="Climate";
+  else if(has(metadata,technology)) section="Technology";
+  else if(has(metadata,policy)) section="Policy";
 
   const commodities=["maize","corn","rice","wheat","coffee","tea","cocoa","sesame","cashew","sunflower","soybean","soy","beans","avocado","fertilizer","sugar","cotton","tobacco","palm oil"];
-  const commodity=commodities.find(item=>text.includes(item)) || null;
+  const commodity=commodities.find(name=>metadata.includes(name)) || null;
   return {section,commodity};
 }
 
@@ -146,7 +194,7 @@ export async function POST(request:NextRequest){
         includeArticleConcepts:true,
         includeArticleLocation:true,
         includeArticleImage:true,
-        dataType:["news","pr"],
+        dataType:["news"],
         forceMaxDataTimeWindow:7,
         apiKey,
       }),

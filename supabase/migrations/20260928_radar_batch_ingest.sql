@@ -132,7 +132,7 @@ begin
         false,
         v_url,
         p_author_id,
-        now(),
+        coalesce(nullif(item #>> '{candidate,published_at}', '')::timestamptz, now()),
         now()
       )
       returning id into v_article_id;

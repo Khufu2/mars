@@ -118,8 +118,19 @@ function classify(item:any){
   return {section,commodity};
 }
 
+function usableImage(value:any){
+  const url=String(value||"").trim();
+  if(!url) return null;
+  if(/(?:\/|\b)(?:rt|pixel|tracking)\.gif(?:\?|$)/i.test(url)) return null;
+  if(/\.gif(?:\?|$)/i.test(url)) return null;
+  return url;
+}
+
 function cleanExcerpt(value:any,max=900){
-  const text=String(value||"").replace(/\s+/g," ").trim();
+  let text=String(value||"").replace(/\s+/g," ").trim();
+  text=text.replace(/^Membership is now required to use this feature\. To learn more:\s*View Membership Benefits\s*/i,"");
+  text=text.replace(/^Subscribe(?: now)?(?: to continue reading)?[.\s:-]*/i,"");
+
   if(!text) return "";
   if(text.length<=max) return text;
   const clipped=text.slice(0,max);
@@ -224,7 +235,7 @@ export async function POST(request:NextRequest){
         const slug=slugify(String(item.title))+"-"+createHash("sha1").update(externalId).digest("hex").slice(0,8);
         const excerpt=cleanExcerpt(item.body,1200);
         const brief=sourceBrief(source,section,region,commodity,publishedAt,excerpt);
-        const imageUrl=item.image ? String(item.image) : null;
+        const imageUrl=usableImage(item.image);
         const hero=imageUrl || siteUrl+"/api/social/card?slug="+encodeURIComponent(slug)+"&slide=1";
 
         return {

@@ -119,10 +119,13 @@ export async function POST(request:NextRequest){
 
   const query={
     "$query":{
-      "$or":[
-        {"categoryUri":"dmoz/Business"},
-        {"categoryUri":"dmoz/Science/Agriculture"},
-        keywordOr(["shipping","logistics","commodity","agriculture","climate"])
+      "$and":[
+        {"lang":"eng"},
+        {"$or":[
+          {"categoryUri":"dmoz/Business"},
+          {"categoryUri":"dmoz/Science/Agriculture"},
+          keywordOr(["shipping","logistics","commodity","agriculture","climate"])
+        ]}
       ]
     },
     "$filter":{"isDuplicate":"skipDuplicates"}

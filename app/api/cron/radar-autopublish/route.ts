@@ -155,7 +155,6 @@ export async function POST(request:NextRequest){
         includeArticleLocation:true,
         includeArticleImage:true,
         dataType:["news","pr"],
-        lang:["eng"],
         forceMaxDataTimeWindow:7,
         apiKey,
       }),

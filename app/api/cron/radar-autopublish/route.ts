@@ -102,14 +102,6 @@ async function ensureRadarAuthor(client:any){
   return data.id;
 }
 
-async function sourceId(client:any,name:string,url:string){
-  const {data:existing}=await client.from("sources").select("id").eq("url",url).limit(1).maybeSingle();
-  if(existing?.id) return existing.id;
-  const {data,error}=await client.from("sources").insert({name,url,source_type:"news"}).select("id").single();
-  if(error) throw error;
-  return data.id;
-}
-
 export async function POST(request:NextRequest){
   if(!authorized(request)) return NextResponse.json({error:"Unauthorized"},{status:401});
   const client=serviceClient();
@@ -173,67 +165,66 @@ export async function POST(request:NextRequest){
     const publishable=results.filter(isBusinessRelevant);
     const authorId=await ensureRadarAuthor(client);
     const siteUrl=process.env.NEXT_PUBLIC_SITE_URL || "https://mars-rust.vercel.app";
-    let published=0,duplicates=0,failed=0;
+    const items=publishable
+      .filter((item:any)=>item?.url&&item?.title)
+      .map((item:any)=>{
+        const externalId=String(item.uri||item.url);
+        const source=String(item?.source?.title||item?.source?.uri||"News source").slice(0,300);
+        const publishedAt=item.dateTimePub||item.dateTime||item.date||null;
+        const {section,commodity}=classify(item);
+        const region=inferRegion(item);
+        const slug=slugify(String(item.title))+"-"+createHash("sha1").update(externalId).digest("hex").slice(0,8);
+        const excerpt=cleanExcerpt(item.body,1200);
+        const brief=sourceBrief(source,section,region,commodity,publishedAt,excerpt);
+        const imageUrl=item.image ? String(item.image) : null;
+        const hero=imageUrl || siteUrl+"/api/social/card?slug="+encodeURIComponent(slug)+"&slide=1";
 
-    for(const item of publishable){
-      if(!item?.url||!item?.title){failed++;continue;}
-      const externalId=String(item.uri||item.url);
-      const {data:known}=await client.from("news_candidates").select("id,article_id").eq("provider","newsapi.ai").eq("external_id",externalId).maybeSingle();
-      if(known?.article_id){duplicates++;continue;}
-
-      const source=String(item?.source?.title||item?.source?.uri||"News source").slice(0,300);
-      const publishedAt=item.dateTimePub||item.dateTime||item.date||null;
-      const {section,commodity}=classify(item);
-      const region=inferRegion(item);
-      const slug=slugify(String(item.title))+"-"+createHash("sha1").update(externalId).digest("hex").slice(0,8);
-      const excerpt=cleanExcerpt(item.body,1200);
-      const brief=sourceBrief(source,section,region,commodity,publishedAt,excerpt);
-      const imageUrl=item.image ? String(item.image) : null;
-      const hero=imageUrl || siteUrl+"/api/social/card?slug="+encodeURIComponent(slug)+"&slide=1";
-
-      const candidatePayload={
-        provider:"newsapi.ai",external_id:externalId,pipeline:"radar-daily-business",title:String(item.title).slice(0,1000),
-        url:String(item.url),source_name:source,source_uri:item?.source?.uri?String(item.source.uri):null,
-        published_at:publishedAt,image_url:imageUrl,language:item.lang?String(item.lang):null,body_excerpt:excerpt||null,
-        categories:Array.isArray(item.categories)?item.categories.slice(0,20):[],
-        concepts:Array.isArray(item.concepts)?item.concepts.slice(0,20):[],
-        locations:item.location?[item.location]:[],
-        provider_payload:{eventUri:item.eventUri||null,sourceRank:item?.source?.ranking?.importanceRank??null},
-        region,desk:section,commodity,status:"used",updated_at:new Date().toISOString(),
-      };
-
-      let candidateId=known?.id || null;
-      if(!candidateId){
-        const {data:candidate,error:candidateError}=await client.from("news_candidates").insert(candidatePayload).select("id").single();
-        if(candidateError){failed++;continue;}
-        candidateId=candidate.id;
-      }
-
-      const articlePayload={
-        slug,title:String(item.title).slice(0,1000),dek:brief.dek,kicker:"MARS RADAR",body:brief.body,
-        section,region,country:region==="Africa"?"Regional":"Global",commodity,story_type:"Radar",status:"published",
-        featured_image_url:hero,image_credit:imageUrl ? "Image via "+source : "MARS Radar",
-        meta_title:String(item.title).slice(0,65),meta_description:brief.dek.slice(0,165),
-        social_copy:{},editorial_checks:{automatedRadar:true},include_in_brief:false,
-        canonical_url:String(item.url),author_id:authorId,published_at:new Date().toISOString(),
-        updated_at:new Date().toISOString(),
-      };
-      const {data:article,error:articleError}=await client.from("articles").insert(articlePayload).select("id").single();
-      if(articleError){failed++;continue;}
-
-      const sid=await sourceId(client,source,String(item.url));
-      await client.from("article_sources").insert({
-        article_id:article.id,source_id:sid,source_url:String(item.url),
-        note:"Original reporting surfaced by MARS Radar. The source extract is limited; open the publisher for the complete article.",
-        verified:false,
+        return {
+          candidate:{
+            external_id:externalId,
+            pipeline:"radar-daily-business",
+            title:String(item.title).slice(0,1000),
+            url:String(item.url),
+            source_name:source,
+            source_uri:item?.source?.uri?String(item.source.uri):null,
+            published_at:publishedAt,
+            image_url:imageUrl,
+            language:item.lang?String(item.lang):null,
+            body_excerpt:excerpt||null,
+            categories:Array.isArray(item.categories)?item.categories.slice(0,20):[],
+            concepts:Array.isArray(item.concepts)?item.concepts.slice(0,20):[],
+            locations:item.location?[item.location]:[],
+            provider_payload:{eventUri:item.eventUri||null,sourceRank:item?.source?.ranking?.importanceRank??null},
+            region,
+            desk:section,
+            commodity,
+          },
+          article:{
+            slug,
+            title:String(item.title).slice(0,1000),
+            dek:brief.dek,
+            body:brief.body,
+            section,
+            region,
+            country:region==="Africa"?"Regional":"Global",
+            commodity,
+            featured_image_url:hero,
+            image_credit:imageUrl ? "Image via "+source : "MARS Radar",
+            meta_title:String(item.title).slice(0,65),
+            meta_description:brief.dek.slice(0,165),
+          }
+        };
       });
-      await client.from("news_candidates").update({article_id:article.id,status:"used",updated_at:new Date().toISOString()}).eq("id",candidateId);
-      await client.from("publication_events").insert({
-        article_id:article.id,event_type:"radar_autopublished",
-        payload:{candidate_id:candidateId,provider:"newsapi.ai",pipeline:"daily-business",source_url:String(item.url)}
-      });
-      published++;
-    }
+
+    const {data:ingest,error:ingestError}=await client.rpc("ingest_mars_radar_batch",{
+      p_items:items,
+      p_author_id:authorId,
+    });
+    if(ingestError) throw ingestError;
+
+    const published=Number(ingest?.published || 0);
+    const duplicates=Number(ingest?.duplicates || 0);
+    const failed=Number(ingest?.failed || 0);
 
     await client.from("ingestion_runs").update({
       status:"completed",items_fetched:results.length,items_upserted:published,finished_at:new Date().toISOString()

@@ -74,7 +74,12 @@ function isBusinessRelevant(item:any){
     "best crypto to buy","next 100x","meme coin"
   ].some(term=>title.includes(term));
 
+  const obviousNoise=[
+    "funeral","shipwreck","cocaine","arrested with","wedding expenses"
+  ].some(term=>title.includes(term));
+
   if(promotional) return false;
+  if(obviousNoise && !directTitle) return false;
   if(excludedCategory && !directTitle) return false;
   return categoryBusiness || directTitle || strategicMetadata;
 }

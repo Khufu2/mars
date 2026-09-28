@@ -94,7 +94,7 @@ function classify(item:any){
   const metadata=metadataText(item);
   const has=(text:string,terms:string[])=>terms.some(term=>text.includes(term));
 
-  const finance=["finance","financial","bank","funding","investment","credit","loan","bond","currency","inflation","interest rate","budget","tax"];
+  const finance=["finance","financial","bank","funding","investment","investor","stock","shares","equity","sensex","nifty","insolvency","credit","loan","bond","currency","inflation","interest rate","budget","tax"];
   const logistics=["port","shipping","freight","corridor","container","rail","truck","logistics","supply chain","maritime"];
   const trade=["export","import","trade","customs","tariff","border","afcfta"];
   const markets=["agriculture","farm","crop","grain","commodity","fertilizer","food price","harvest","maize","rice","wheat","coffee","cocoa"];

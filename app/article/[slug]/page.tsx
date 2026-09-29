@@ -36,7 +36,6 @@ export default async function ArticlePage({ params }: { params: { slug: string }
         <span>{article.region}</span>
         {article.storyType && <span>{article.storyType}</span>}
       </div>
-      {article.storyType === "Radar" && <div className="radarDisclosure"><strong>MARS Radar</strong><span>Automatically surfaced source brief with a limited source extract and available publisher image. Use the original source for the complete article.</span>{article.canonicalUrl && <a href={article.canonicalUrl} target="_blank" rel="noreferrer">Read full original ↗</a>}</div>}
       {article.sponsorName && <div className="sponsorDisclosure">{article.sponsorDisclosure || "Sponsored"} · {article.sponsorName}</div>}
       <header className={"articleHero accent-" + article.accent}>
         <h1>{article.title}</h1>
@@ -49,7 +48,10 @@ export default async function ArticlePage({ params }: { params: { slug: string }
       </header>
       <figure className="articleFigure">
         <img src={article.image} alt="" />
-        <figcaption>{article.imageCredit}</figcaption>
+        <figcaption>
+          <span>{article.imageCredit}</span>
+          {article.canonicalUrl && <a className="publisherTiny" href={article.canonicalUrl} target="_blank" rel="noreferrer">Open publisher ↗</a>}
+        </figcaption>
       </figure>
       <div className="articleBodyGrid">
         <div className="shareRail">

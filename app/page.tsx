@@ -1,145 +1,131 @@
 import Link from "next/link";
-import { marketRows } from "@/lib/data";
-import { getHomepageArticles, type PublishedArticle } from "@/lib/content";
+import { getPublishedArticles, type PublishedArticle } from "@/lib/content";
 import { NewsletterForm } from "@/components/NewsletterForm";
-
-function MiniStory({ story }: { story: PublishedArticle }) {
-  return (
-    <article className={"miniStory accentLine-" + story.accent}>
-      <div className="storyLabel">{story.section}</div>
-      <Link href={"/article/" + story.slug}><h3>{story.title}</h3></Link>
-      <p>{story.dek}</p>
-      <div className="creditLine">{story.author}{story.isPrototype ? " · Prototype" : ""}</div>
-    </article>
-  );
-}
 
 export const revalidate = 60;
 
-export default async function Home() {
-  const articles = await getHomepageArticles(6);
-  const lead = articles[0];
+const sectionOrder = [
+  "Africa","Business","Markets","Agriculture","Commodities","Trade","Logistics",
+  "Finance","Technology","Energy","Climate","Policy","World","Companies"
+];
 
-  return (
-    <main className="semaHome">
-      <section className="topStories">
-        <article className="heroLead">
-          <div className="storyLabel">{lead.section}{lead.isPrototype ? " / PROTOTYPE" : ""}</div>
-          <Link href={"/article/" + lead.slug}><h1>{lead.title}</h1></Link>
-          <p className="heroStandfirst">{lead.dek}</p>
-          <div className="creditLine">{lead.author} · {lead.publishedAt}</div>
-        </article>
+function storyUrl(story:PublishedArticle){ return "/article/"+story.slug; }
 
-        <Link className="heroPhoto" href={"/article/" + lead.slug}>
-          <img src={lead.image} alt="" />
-          <span>{lead.imageCredit}</span>
-        </Link>
+function StoryText({story,compact=false}:{story:PublishedArticle;compact?:boolean}){
+  return <article className={compact?"denseStory compact":"denseStory"}>
+    <div className="denseKicker">{story.section}{story.region ? " · "+story.region : ""}</div>
+    <Link href={storyUrl(story)}><h3>{story.title}</h3></Link>
+    {!compact && story.dek && <p>{story.dek}</p>}
+    <div className="denseMeta">{story.author} · {story.publishedAt}</div>
+  </article>;
+}
 
-        <div className="topRail">
-          <MiniStory story={articles[1]} />
-          <MiniStory story={articles[2]} />
-        </div>
-      </section>
+function SectionModule({title,stories}:{title:string;stories:PublishedArticle[]}){
+  if(!stories.length) return null;
+  const lead=stories[0];
+  const left=stories.slice(1,4);
+  const right=stories.slice(4,7);
+  return <section className="editorialSection">
+    <div className="editorialSectionTitle">
+      <Link href={"/section/"+title.toLowerCase().replace(/\s+/g,"-")}>{title}</Link>
+    </div>
+    <div className="editorialSectionGrid">
+      <div className="editorialSideList">
+        {left.map(story=><StoryText key={story.slug} story={story} compact />)}
+      </div>
+      <article className="editorialLead">
+        <Link href={storyUrl(lead)} className="editorialLeadImage"><img src={lead.image} alt="" /></Link>
+        <div className="denseKicker">{lead.section}{lead.region ? " · "+lead.region : ""}</div>
+        <Link href={storyUrl(lead)}><h2>{lead.title}</h2></Link>
+        {lead.dek && <p>{lead.dek}</p>}
+        <div className="denseMeta">{lead.author} · {lead.publishedAt}</div>
+      </article>
+      <div className="editorialSideList right">
+        {right.map(story=><StoryText key={story.slug} story={story} compact />)}
+      </div>
+    </div>
+  </section>;
+}
 
-      <section className="viewBand">
-        <div className="viewItem">
-          <span>View /</span>
-          <Link href={"/article/" + articles[3].slug}>{articles[3].title}</Link>
-          <small>{articles[3].author}</small>
-        </div>
-        <div className="viewItem">
-          <span>Signal /</span>
-          <Link href={"/article/" + articles[4].slug}>{articles[4].title}</Link>
-          <small>{articles[4].author}</small>
-        </div>
-      </section>
+export default async function Home(){
+  const articles=await getPublishedArticles(140);
+  const live=articles.filter(a=>!a.isPrototype);
+  const stories=live.length?live:articles;
+  const lead=stories[0];
+  const glance=stories.slice(1,6);
+  const rail=stories.slice(6,10);
 
-      <section className="glanceModule">
-        <div className="moduleHeading">
-          <h2>Africa at a Glance</h2>
-          <span>Markets, climate, trade and logistics</span>
-        </div>
-        <div className="glanceBody">
-          <div className="africaPanel">
-            <div className="continentWord">AFRICA</div>
-            <i className="mapDot dot1" /><i className="mapDot dot2" /><i className="mapDot dot3" /><i className="mapDot dot4" />
-          </div>
-          <ol className="glanceItems">
-            <li><span>1</span><p><strong>Tanzania:</strong> logistics and quality aggregation increasingly determine export economics.</p></li>
-            <li><span>2</span><p><strong>East Africa:</strong> rainfall becomes commercially useful when tied to crop calendars and procurement.</p></li>
-            <li><span>3</span><p><strong>Regional trade:</strong> policy notices can change reachable demand before price charts catch up.</p></li>
-            <li><span>4</span><p><strong>Input markets:</strong> credit, currency and dealer liquidity shape whether supply reaches farms.</p></li>
-            <li><span>5</span><p><strong>Ports:</strong> food trade needs corridor intelligence, not just harvest reporting.</p></li>
-            <li><span>6</span><p><strong>Markets:</strong> MARS connects price, freight, climate and verified events.</p></li>
-          </ol>
-        </div>
-      </section>
+  const bySection = new Map<string,PublishedArticle[]>();
+  for(const article of stories){
+    const key=article.section || "World";
+    if(!bySection.has(key)) bySection.set(key,[]);
+    bySection.get(key)!.push(article);
+  }
 
-      <section className="briefStrip" id="brief">
-        <div className="briefStripCopy">
-          <span className="storyLabel">THE MARS BRIEF</span>
-          <h2>Africa&apos;s food economy before your first meeting.</h2>
-          <p>A concise morning briefing for operators, exporters, investors, policy teams and anyone moving food across the continent.</p>
-        </div>
-        <NewsletterForm />
-      </section>
+  const used=new Set<string>([lead?.slug,...glance.map(x=>x.slug),...rail.map(x=>x.slug)].filter(Boolean) as string[]);
+  const sectionBuckets=sectionOrder.map(section=>{
+    const exact=(bySection.get(section)||[]).filter(s=>!used.has(s.slug));
+    const fallback=stories.filter(s=>!used.has(s.slug) && !exact.some(e=>e.slug===s.slug));
+    const bucket=[...exact,...fallback].slice(0,7);
+    bucket.forEach(s=>used.add(s.slug));
+    return {section,stories:bucket};
+  }).filter(item=>item.stories.length>=2);
 
-      <section className="deskSection">
-        <div className="deskHeader"><Link href="/markets">Markets</Link><span>Price, demand and the forces moving both.</span></div>
-        <div className="deskGrid">
-          <MiniStory story={articles[5]} />
-          <div className="marketBoard">
-            <div className="marketBoardHead"><span>Market Board</span><small>Prototype data</small></div>
-            {marketRows.map(row => (
-              <div className="marketBoardRow" key={row.name}><strong>{row.name}</strong><span>{row.value}</span><em className={row.direction === "up" ? "positive" : "negative"}>{row.move}</em></div>
-            ))}
-          </div>
-          <div className="deskNote">
-            <span className="storyLabel">WHY MARS</span>
-            <h3>Price is only half the story.</h3>
-            <p>Commodity intelligence becomes more useful when freight, rainfall, rules and counterparties sit next to the price.</p>
-            <Link href="/markets">Open Markets →</Link>
-          </div>
-        </div>
-      </section>
+  if(!lead) return <main className="denseHome"><div className="emptyState"><h1>MARS is loading the wire.</h1></div></main>;
 
-      <section className="deskSection">
-        <div className="deskHeader"><Link href="/section/climate">Climate</Link><span>Weather as a market input.</span></div>
-        <div className="featureGrid">
-          <article className="featureStory">
-            <img src={articles[1].image} alt="" />
-            <div className="storyLabel">{articles[1].section}</div>
-            <Link href={"/article/" + articles[1].slug}><h2>{articles[1].title}</h2></Link>
-            <p>{articles[1].dek}</p>
-          </article>
-          <article className="colorPanel colorPanelBlue">
-            <span className="storyLabel">CLIMATE SIGNAL</span>
-            <h2>Local crop context beats generic weather alerts.</h2>
-            <p>MARS connects rainfall anomalies with planting stages, road access and market exposure.</p>
-            <Link href="/section/climate">Explore Climate →</Link>
-          </article>
-        </div>
-      </section>
+  return <main className="denseHome">
+    <section className="frontGrid">
+      <aside className="glanceRail">
+        <div className="frontLabel">The world at a glance</div>
+        <ol>
+          {glance.map((story,index)=><li key={story.slug}>
+            <span>{index+1}</span>
+            <Link href={storyUrl(story)}>{story.title}</Link>
+          </li>)}
+        </ol>
+      </aside>
 
-      <section className="deskSection">
-        <div className="deskHeader"><Link href="/section/trade">Trade & Logistics</Link><span>Where opportunity meets movement.</span></div>
-        <div className="threeUp">
-          {[articles[2],articles[4],articles[0]].map(story => (
-            <article className={"feedCard accentLine-" + story.accent} key={story.slug}>
-              <img src={story.image} alt="" />
-              <div className="storyLabel">{story.section}</div>
-              <Link href={"/article/" + story.slug}><h3>{story.title}</h3></Link>
-              <p>{story.dek}</p>
-            </article>
-          ))}
-        </div>
-      </section>
+      <article className="frontLead">
+        <div className="denseKicker">{lead.section}{lead.region ? " · "+lead.region : ""}</div>
+        <Link href={storyUrl(lead)}><h1>{lead.title}</h1></Link>
+        {lead.dek && <p>{lead.dek}</p>}
+        <Link href={storyUrl(lead)} className="frontLeadImage"><img src={lead.image} alt="" /></Link>
+        <div className="denseMeta">{lead.author} · {lead.publishedAt}</div>
+      </article>
 
-      <section className="grainxCallout">
-        <div><span className="storyLabel">FROM INTELLIGENCE TO ACTION</span><h2>See demand. Find supply. Move.</h2></div>
-        <p>MARS stays useful as an editorial product on its own. When a story reveals real commercial intent, Grain X becomes the action layer.</p>
+      <aside className="frontRightRail">
+        {rail.slice(0,2).map(story=><article className="frontRailStory" key={story.slug}>
+          <div className="denseKicker">{story.section}</div>
+          <Link href={storyUrl(story)}><h2>{story.title}</h2></Link>
+          {story.image && <Link href={storyUrl(story)}><img src={story.image} alt="" /></Link>}
+          <p>{story.dek}</p>
+        </article>)}
+      </aside>
+    </section>
+
+    <section className="latestBand">
+      <div className="frontLabel">Latest</div>
+      <div className="latestBandGrid">
+        {stories.slice(10,14).map(story=><StoryText key={story.slug} story={story} compact />)}
+      </div>
+    </section>
+
+    <section className="briefInline">
+      <div>
+        <div className="frontLabel">MARS Briefings</div>
+        <h2>Intelligence for Africa&apos;s food economy — and the world around it.</h2>
+        <p>A sharp daily read across markets, agriculture, companies, technology, climate, trade, policy and finance.</p>
+      </div>
+      <NewsletterForm />
+    </section>
+
+    {sectionBuckets.map(({section,stories},index)=><div key={section}>
+      <SectionModule title={section} stories={stories} />
+      {index===2 && <section className="grainxInline">
+        <div className="frontLabel">From intelligence to action</div>
+        <h2>When the story becomes a trade, Grain X is the next layer.</h2>
         <a href="https://grainx.xyz" target="_blank" rel="noreferrer">Open Grain X ↗</a>
-      </section>
-    </main>
-  );
+      </section>}
+    </div>)}
+  </main>;
 }

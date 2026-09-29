@@ -5,7 +5,7 @@ import { serviceClient,slugify } from "@/lib/studioServer";
 export const dynamic="force-dynamic";
 export const maxDuration=60;
 
-const EXPECTED_HASH="a64a0f88aef74d217a83da17bc5a1018fd67988655f8e5006abaf46d8e255d0b";
+const EXPECTED_HASH="f8512f2c462d437bffa9eff537de4ccf5b1304efc5968783849a94da42adb0c4";
 
 const eastAfrica=["Africa","Tanzania","Kenya","Uganda","Rwanda","Burundi","Ethiopia","South Sudan","Zanzibar"];
 const widerAfrica=[...eastAfrica,"Zambia","Malawi","Mozambique","Ghana","Nigeria","South Africa","Zimbabwe","Botswana","Namibia","Angola","Côte d'Ivoire","Senegal","Cameroon"];

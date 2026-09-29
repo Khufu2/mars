@@ -38,11 +38,9 @@ function metadataText(item:any){
 }
 
 function containsTerm(text:string,term:string){
-  const escaped=term.replace(/[.*+?^$(){}|[\\]\\\\]/g,"\\function metadataText(item:any){
-  return (String(item?.title||"")+" "+conceptText(item)+" "+categoryText(item)).toLowerCase();
-}
-").replace(/\\s+/g,"\\\\s+");
-  return new RegExp("(^|[^a-z0-9])"+escaped+"([^a-z0-9]|$)","i").test(text);
+  const normalized=" "+text.toLowerCase().replace(/[^a-z0-9]+/g," ").replace(/\s+/g," ").trim()+" ";
+  const needle=" "+term.toLowerCase().replace(/[^a-z0-9]+/g," ").replace(/\s+/g," ").trim()+" ";
+  return normalized.includes(needle);
 }
 
 function hasAny(text:string,terms:readonly string[]){

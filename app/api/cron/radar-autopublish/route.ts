@@ -75,11 +75,11 @@ function isBusinessRelevant(item:any){
   const title=String(item?.title||"").toLowerCase();
   const categories=categoryText(item);
   const concepts=conceptText(item);
-  const metadata=(title+" "+concepts+" "+categories).toLowerCase();
+  const conceptMetadata=(title+" "+concepts).toLowerCase();
   const region=inferRegion(item);
 
   const direct=hasAny(title,coreTitleSignals);
-  const strategic=hasAny(metadata,strategicMetadataSignals);
+  const strategic=hasAny(conceptMetadata,strategicMetadataSignals);
   const categoryBusiness=
     categories.includes("news/business") ||
     categories.includes("economy, business and finance") ||

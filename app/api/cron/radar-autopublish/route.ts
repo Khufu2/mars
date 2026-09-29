@@ -17,7 +17,7 @@ type Feed={
 
 const feeds:Feed[]=[
   {key:"world",label:"World business",section:"World",topics:["business","economy","markets","investment","trade","companies","industry","finance"]},
-  {key:"africa",label:"Africa",section:"Africa",topics:["business","economy","investment","trade","agriculture","energy","technology"],geos:["Africa","Nigeria","South Africa","Ghana","Kenya","Tanzania","Uganda","Rwanda","Ethiopia","Zambia","Mozambique"]},
+  {key:"africa",label:"Africa",section:"Africa",topics:["business","economy","investment","trade","agriculture","energy"],geos:["Africa","Nigeria","South Africa","Ghana","Kenya","Tanzania","Uganda","Ethiopia"]},
   {key:"east-africa",label:"East Africa",section:"Africa",topics:["business","trade","agriculture","infrastructure","banking","technology","energy"],geos:["Tanzania","Kenya","Uganda","Rwanda","Burundi","Ethiopia","East Africa"]},
   {key:"agriculture",label:"Agriculture & food",section:"Agriculture",topics:["agriculture","farming","crop","grain","food security","fertilizer","irrigation","harvest","livestock","horticulture"]},
   {key:"commodities",label:"Commodities",section:"Commodities",topics:["commodity","coffee","cocoa","maize","wheat","rice","soybean","sesame","cashew","sugar","cotton","gold","copper","oil"]},
@@ -112,13 +112,16 @@ export async function POST(request:NextRequest){
   if(!apiKey) return NextResponse.json({error:"NEWSAPI_AI_KEY is missing in Vercel."},{status:503});
 
   const body=await request.json().catch(()=>({}));
-  const requested=String(body.feed||"world");
-  const feed=feeds.find(item=>item.key===requested) || feeds[0];
+  const now=new Date();
+  const rotationIndex=(Math.floor(now.getTime()/86400000)*2+(now.getUTCHours()>=12?1:0))%feeds.length;
+  const requested=String(body.feed||feeds[rotationIndex].key);
+  const feed=feeds.find(item=>item.key===requested) || feeds[rotationIndex];
+  const page=Math.min(5,Math.max(1,Number(body.page||1)));
   const query=buildQuery(feed);
   const startedAt=new Date().toISOString();
 
   const {data:run,error:runError}=await client.from("ingestion_runs").insert({
-    provider:"newsapi.ai",pipeline:"radar-"+feed.key,query,status:"running",estimated_searches:1,started_at:startedAt
+    provider:"newsapi.ai",pipeline:"radar-"+feed.key+"-p"+page,query,status:"running",estimated_searches:1,started_at:startedAt
   }).select("id").single();
   if(runError) return NextResponse.json({error:runError.message},{status:500});
 
@@ -130,7 +133,7 @@ export async function POST(request:NextRequest){
         action:"getArticles",
         query,
         resultType:"articles",
-        articlesPage:1,
+        articlesPage:page,
         articlesCount:100,
         articlesSortBy:"date",
         articlesSortByAsc:false,
@@ -170,7 +173,7 @@ export async function POST(request:NextRequest){
 
       return {
         candidate:{
-          external_id:externalId,pipeline:"radar-"+feed.key,title:String(item.title).slice(0,1000),url:String(item.url),
+          external_id:externalId,pipeline:"radar-"+feed.key+"-p"+page,title:String(item.title).slice(0,1000),url:String(item.url),
           source_name:source,source_uri:item?.source?.uri?String(item.source.uri):null,published_at:publishedAt,
           image_url:imageUrl,language:item.lang?String(item.lang):null,body_excerpt:excerpt||null,
           categories:Array.isArray(item.categories)?item.categories.slice(0,20):[],
@@ -198,7 +201,7 @@ export async function POST(request:NextRequest){
       status:"completed",items_fetched:results.length,items_upserted:published,finished_at:new Date().toISOString()
     }).eq("id",run.id);
 
-    return NextResponse.json({ok:true,feed:feed.key,label:feed.label,fetched:results.length,published,duplicates,failed,searchesUsed:1});
+    return NextResponse.json({ok:true,feed:feed.key,page,label:feed.label,fetched:results.length,published,duplicates,failed,searchesUsed:1});
   }catch(error){
     const message=error instanceof Error?error.message:"Radar sync failed";
     await client.from("ingestion_runs").update({status:"failed",error:message,finished_at:new Date().toISOString()}).eq("id",run.id);

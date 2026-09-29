@@ -37,6 +37,18 @@ function metadataText(item:any){
   return (String(item?.title||"")+" "+conceptText(item)+" "+categoryText(item)).toLowerCase();
 }
 
+function containsTerm(text:string,term:string){
+  const escaped=term.replace(/[.*+?^$(){}|[\\]\\\\]/g,"\\function metadataText(item:any){
+  return (String(item?.title||"")+" "+conceptText(item)+" "+categoryText(item)).toLowerCase();
+}
+").replace(/\\s+/g,"\\\\s+");
+  return new RegExp("(^|[^a-z0-9])"+escaped+"([^a-z0-9]|$)","i").test(text);
+}
+
+function hasAny(text:string,terms:readonly string[]){
+  return terms.some(term=>containsTerm(text,term));
+}
+
 const coreTitleSignals=[
   "agriculture","agricultural","agribusiness","agritech","farm","farmer","crop","grain","commodity",
   "maize","rice","wheat","coffee","cocoa","sesame","cashew","sunflower","soybean","beans","avocado",
@@ -68,8 +80,8 @@ function isBusinessRelevant(item:any){
   const metadata=(title+" "+concepts+" "+categories).toLowerCase();
   const region=inferRegion(item);
 
-  const direct=coreTitleSignals.some(term=>title.includes(term));
-  const strategic=strategicMetadataSignals.some(term=>metadata.includes(term));
+  const direct=hasAny(title,coreTitleSignals);
+  const strategic=hasAny(metadata,strategicMetadataSignals);
   const categoryBusiness=
     categories.includes("news/business") ||
     categories.includes("economy, business and finance") ||
@@ -79,7 +91,7 @@ function isBusinessRelevant(item:any){
     "sports","arts and entertainment","crime, law and justice","religion and belief",
     "conflict, war and peace","health","medicine"
   ].some(term=>categories.includes(term));
-  const hardNoise=hardNoiseTerms.some(term=>title.includes(term));
+  const hardNoise=hasAny(title,hardNoiseTerms);
 
   if(hardNoise) return false;
   if(excludedCategory && !direct) return false;
@@ -97,7 +109,7 @@ function inferRegion(item:any){
 function classify(item:any){
   const title=String(item?.title||"").toLowerCase();
   const metadata=metadataText(item);
-  const has=(text:string,terms:string[])=>terms.some(term=>text.includes(term));
+  const has=(text:string,terms:string[])=>hasAny(text,terms);
 
   const finance=["finance","financial","bank","funding","investment","investor","stock","shares","equity","sensex","nifty","insolvency","credit","loan","bond","currency","inflation","interest rate","budget","tax"];
   const logistics=["port","shipping","freight","corridor","container","rail","truck","logistics","supply chain","maritime"];

@@ -1,13 +1,19 @@
 import Link from "next/link";
 
 const nav = [
+  { label: "Africa", href: "/section/africa" },
+  { label: "Business", href: "/section/business" },
   { label: "Markets", href: "/markets" },
+  { label: "Agriculture", href: "/section/agriculture" },
   { label: "Commodities", href: "/commodities" },
-  { label: "Climate", href: "/section/climate" },
   { label: "Trade", href: "/section/trade" },
   { label: "Logistics", href: "/section/logistics" },
-  { label: "Policy", href: "/section/policy" },
   { label: "Finance", href: "/section/finance" },
+  { label: "Technology", href: "/section/technology" },
+  { label: "Energy", href: "/section/energy" },
+  { label: "Climate", href: "/section/climate" },
+  { label: "Policy", href: "/section/policy" },
+  { label: "World", href: "/section/world" },
 ];
 
 const editions = [
@@ -37,7 +43,7 @@ export function Header() {
       <div className="mastBrandRow">
         <Link className="brandWordmark" href="/" aria-label="MARS home">MARS</Link>
         <div className="marsOrb" aria-hidden="true"><span /></div>
-        <div className="brandDescriptor">Agriculture · Commodities · Climate · Trade</div>
+        <div className="brandDescriptor">Africa · Business · Markets · Technology · Climate · Trade</div>
       </div>
 
       <div className="mastNavRow">

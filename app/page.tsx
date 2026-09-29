@@ -64,9 +64,7 @@ export default async function Home(){
 
   const used=new Set<string>([lead?.slug,...glance.map(x=>x.slug),...rail.map(x=>x.slug)].filter(Boolean) as string[]);
   const sectionBuckets=sectionOrder.map(section=>{
-    const exact=(bySection.get(section)||[]).filter(s=>!used.has(s.slug));
-    const fallback=stories.filter(s=>!used.has(s.slug) && !exact.some(e=>e.slug===s.slug));
-    const bucket=[...exact,...fallback].slice(0,7);
+    const bucket=(bySection.get(section)||[]).filter(s=>!used.has(s.slug)).slice(0,7);
     bucket.forEach(s=>used.add(s.slug));
     return {section,stories:bucket};
   }).filter(item=>item.stories.length>=2);

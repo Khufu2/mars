@@ -37,14 +37,28 @@ function metadataText(item:any){
   return (String(item?.title||"")+" "+conceptText(item)+" "+categoryText(item)).toLowerCase();
 }
 
-const strongBusinessTerms=[
-  "business","market","markets","economy","economic","finance","financial","bank","banking","investment",
-  "investor","funding","fund","company","corporate","startup","merger","acquisition","revenue","profit",
-  "earnings","manufacturing","factory","industry","industrial","trade","export","import","tariff","tax",
-  "budget","shipping","freight","port","logistics","supply chain","container","agriculture","agricultural",
-  "farm","farmer","crop","grain","commodity","maize","rice","wheat","coffee","tea","cocoa","fertilizer",
-  "food price","food security","agribusiness","agritech","energy","oil","gas","mining","currency",
-  "inflation","interest rate","climate","drought","flood"
+const coreTitleSignals=[
+  "agriculture","agricultural","agribusiness","agritech","farm","farmer","crop","grain","commodity",
+  "maize","rice","wheat","coffee","cocoa","sesame","cashew","sunflower","soybean","beans","avocado",
+  "fertilizer","food security","harvest","export","import","trade","customs","tariff","afcfta",
+  "shipping","freight","port","logistics","supply chain","container","maritime","currency","inflation",
+  "interest rate","central bank","reserve bank","stock","shares","equity","bond","investment","investor",
+  "funding","revenue","profit","earnings","acquisition","merger","ipo","manufacturing","factory",
+  "industrial","energy","oil","gas","mining","telecom","finance","financial","banking","economy",
+  "economic","budget","tax","climate","drought","flood","rainfall","weather"
+];
+
+const strategicMetadataSignals=[
+  "agriculture","agricultural","agribusiness","commodity","shipping","freight","logistics","supply chain",
+  "port","export","import","trade","finance","investment","manufacturing","energy","mining","food security",
+  "fertilizer","climate","drought","inflation","central bank","currency"
+];
+
+const hardNoiseTerms=[
+  "football","soccer","juventus","premier league","champions league","instagram series","wedding",
+  "funeral","celebrity","actor","actress","movie","film","music","fashion","reality show","oncology",
+  "cancer","clinical trial","pharmaceutical","murder","arrest","cocaine","war","airstrike","militant",
+  "crypto","bitcoin","ethereum","meme coin","airdrop","token sale","price prediction","presale"
 ];
 
 function isBusinessRelevant(item:any){
@@ -52,36 +66,27 @@ function isBusinessRelevant(item:any){
   const categories=categoryText(item);
   const concepts=conceptText(item);
   const metadata=(title+" "+concepts+" "+categories).toLowerCase();
+  const region=inferRegion(item);
 
+  const direct=coreTitleSignals.some(term=>title.includes(term));
+  const strategic=strategicMetadataSignals.some(term=>metadata.includes(term));
   const categoryBusiness=
     categories.includes("news/business") ||
     categories.includes("economy, business and finance") ||
     categories.includes("dmoz/business");
 
-  const directTitle=strongBusinessTerms.some(term=>title.includes(term));
-  const strategicMetadata=[
-    "agriculture","agricultural","commodity","shipping","freight","logistics","supply chain",
-    "port","export","import","trade","finance","investment","manufacturing","energy","mining"
-  ].some(term=>metadata.includes(term));
-
   const excludedCategory=[
-    "crime, law and justice","sports","arts and entertainment","travel and tourism",
-    "religion and belief","conflict, war and peace","politics and government"
+    "sports","arts and entertainment","crime, law and justice","religion and belief",
+    "conflict, war and peace","health","medicine"
   ].some(term=>categories.includes(term));
+  const hardNoise=hardNoiseTerms.some(term=>title.includes(term));
 
-  const promotional=[
-    "presale","price prediction","airdrop","buy now","token sale","sponsored content",
-    "best crypto to buy","next 100x","meme coin"
-  ].some(term=>title.includes(term));
+  if(hardNoise) return false;
+  if(excludedCategory && !direct) return false;
 
-  const obviousNoise=[
-    "funeral","shipwreck","cocaine","arrested with","wedding expenses"
-  ].some(term=>title.includes(term));
-
-  if(promotional) return false;
-  if(obviousNoise && !directTitle) return false;
-  if(excludedCategory && !directTitle) return false;
-  return categoryBusiness || directTitle || strategicMetadata;
+  // Africa gets a slightly broader lens; global stories need a clear economic/sector signal.
+  if(region==="Africa") return direct || strategic;
+  return direct || (categoryBusiness && strategic);
 }
 
 function inferRegion(item:any){

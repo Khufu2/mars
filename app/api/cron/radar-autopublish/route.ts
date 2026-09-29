@@ -68,18 +68,18 @@ const hardNoiseTerms=[
   "football","soccer","juventus","premier league","champions league","instagram series","wedding",
   "funeral","celebrity","actor","actress","movie","film","music","fashion","reality show","oncology",
   "cancer","clinical trial","pharmaceutical","murder","arrest","cocaine","war","airstrike","militant",
-  "crypto","bitcoin","ethereum","meme coin","airdrop","token sale","price prediction","presale"
+  "crypto","cryptocurrency","bitcoin","ethereum","blockchain","web3","defi","hyperliquid","meme coin","airdrop","token sale","price prediction","presale"
 ];
 
 function isBusinessRelevant(item:any){
   const title=String(item?.title||"").toLowerCase();
   const categories=categoryText(item);
   const concepts=conceptText(item);
-  const metadata=(title+" "+concepts+" "+categories).toLowerCase();
+  const conceptMetadata=(title+" "+concepts).toLowerCase();
   const region=inferRegion(item);
 
   const direct=hasAny(title,coreTitleSignals);
-  const strategic=hasAny(metadata,strategicMetadataSignals);
+  const strategic=hasAny(conceptMetadata,strategicMetadataSignals);
   const categoryBusiness=
     categories.includes("news/business") ||
     categories.includes("economy, business and finance") ||
@@ -89,7 +89,7 @@ function isBusinessRelevant(item:any){
     "sports","arts and entertainment","crime, law and justice","religion and belief",
     "conflict, war and peace","health","medicine"
   ].some(term=>categories.includes(term));
-  const hardNoise=hasAny(title,hardNoiseTerms);
+  const hardNoise=hasAny(conceptMetadata,hardNoiseTerms);
 
   if(hardNoise) return false;
   if(excludedCategory && !direct) return false;

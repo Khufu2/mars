@@ -1,6 +1,5 @@
+'use client';
 import React,{useEffect,useState}from'react';
-import{createRoot}from'react-dom/client';
-import'./style.css';
 
 const seed=[
 {id:'alizeti',name:'Alizeti Sunflower Factory',kind:'Manufacturing',status:'Funding',capital:200000000,capex:118000000,fixed:24000000,price:7500,cost:4500,units:18000,pool:40,funded:55000000,desc:'Sunflower oil processing and seed-cake production.'},
@@ -60,4 +59,4 @@ function Portfolio({investments,biz}){const rows=investments.map((x,i)=>{const b
 
 function Create({close,create}){const[f,setF]=useState({name:'',kind:'New venture',capital:100000000,capex:50000000,fixed:10000000,price:10000,cost:5000,units:3000,pool:35,funded:0,desc:''});const set=(k,v)=>setF(Object.assign({},f,{[k]:v}));return<div className="modalWrap" onMouseDown={e=>e.target===e.currentTarget&&close()}><div className="modal"><div className="modalHead"><span><small className="kicker">New business</small><h2>Build the model</h2></span><button onClick={close}>×</button></div><div className="formGrid"><label className="field"><span>Business name</span><div><input value={f.name} onChange={e=>set('name',e.target.value)}/></div></label><label className="field"><span>Category</span><div><input value={f.kind} onChange={e=>set('kind',e.target.value)}/></div></label><Field label="Capital target" value={f.capital} moneyField onChange={v=>set('capital',v)}/><Field label="Capital expenditure" value={f.capex} moneyField onChange={v=>set('capex',v)}/><Field label="Monthly fixed expenses" value={f.fixed} moneyField onChange={v=>set('fixed',v)}/><Field label="Selling price / unit" value={f.price} moneyField onChange={v=>set('price',v)}/><Field label="Variable cost / unit" value={f.cost} moneyField onChange={v=>set('cost',v)}/><Field label="Units / month" value={f.units} onChange={v=>set('units',v)}/><Field label="Investor profit pool %" value={f.pool} onChange={v=>set('pool',v)}/></div><label className="field desc"><span>Description</span><div><input value={f.desc} onChange={e=>set('desc',e.target.value)}/></div></label><div className="actions"><button className="ghost" onClick={close}>Cancel</button><button className="primary" onClick={()=>f.name.trim()&&create(Object.assign({},f,{id:'b-'+Date.now(),status:'Funding'}))}>Create business</button></div></div></div>}
 
-createRoot(document.getElementById('root')).render(<React.StrictMode><App/></React.StrictMode>);
+export default App;

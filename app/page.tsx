@@ -45,19 +45,30 @@ function PictureStory({story,large=false}:{story:PublishedArticle;large?:boolean
   </article>
 }
 
+function deskHref(title:string){
+  const map:Record<string,string>={
+    "Markets & Finance":"/markets",
+    "Agriculture & Commodities":"/section/agriculture",
+    "Trade & Logistics":"/section/trade",
+    "Technology & Energy":"/section/technology",
+    "Climate & Policy":"/section/climate",
+  };
+  return map[title]||"/section/"+title.toLowerCase();
+}
+
 function DeskSection({title,stories,variant="standard"}:{title:string;stories:PublishedArticle[];variant?:"standard"|"dark"|"cards"}){
   if(stories.length<2) return null;
   const lead=stories[0];
   const rest=stories.slice(1,7);
   if(variant==="cards"){
     return <section className="gazetteDesk">
-      <div className="gazetteDeskHead"><Link href={"/section/"+title.toLowerCase()}>{title}</Link><span>Latest reporting and source-linked intelligence</span></div>
+      <div className="gazetteDeskHead"><Link href={deskHref(title)}>{title}</Link><span>Latest reporting and source-linked intelligence</span></div>
       <div className="gazetteCardGrid">{stories.slice(0,6).map((s,i)=><PictureStory story={s} large={i===0} key={s.slug}/>)}</div>
     </section>
   }
   if(variant==="dark"){
     return <section className="gazetteDesk gazetteDarkDesk">
-      <div className="gazetteDeskHead"><Link href={"/section/"+title.toLowerCase()}>{title}</Link><span>Capital, companies and the numbers moving decisions</span></div>
+      <div className="gazetteDeskHead"><Link href={deskHref(title)}>{title}</Link><span>Capital, companies and the numbers moving decisions</span></div>
       <div className="gazetteDarkGrid">
         <PictureStory story={lead} large/>
         <div className="gazetteDarkStack">{rest.slice(0,4).map(s=><TextStory story={s} key={s.slug}/>)}</div>
@@ -65,7 +76,7 @@ function DeskSection({title,stories,variant="standard"}:{title:string;stories:Pu
     </section>
   }
   return <section className="gazetteDesk">
-    <div className="gazetteDeskHead"><Link href={"/section/"+title.toLowerCase()}>{title}</Link><span>MARS desk</span></div>
+    <div className="gazetteDeskHead"><Link href={deskHref(title)}>{title}</Link><span>MARS desk</span></div>
     <div className="gazetteDeskGrid">
       <div className="gazetteDeskLead"><PictureStory story={lead} large/></div>
       <div className="gazetteDeskColumns">{rest.slice(0,4).map(s=><TextStory story={s} key={s.slug}/>)}</div>

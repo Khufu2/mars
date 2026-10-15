@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { serviceClient } from "@/lib/studioServer";
 import { articles as prototypeArticles, type Article, type StorySection } from "@/lib/data";
 
 type DbAuthor = { name?: string | null };
@@ -162,6 +163,64 @@ export async function getHomepageArticles(minimum = 6): Promise<PublishedArticle
   return live;
 }
 
+function newsBodyParagraphs(value: unknown): string[] {
+  const raw=String(value||"").replace(/\r/g,"").trim();
+  if(!raw) return [];
+  let paragraphs=raw.split(/\n\s*\n+/).map(p=>p.replace(/\s+/g," ").trim()).filter(Boolean);
+  if(paragraphs.length===1 && paragraphs[0].length>900){
+    const sentences=paragraphs[0].match(/[^.!?]+[.!?]+(?:["')\]]+)?|[^.!?]+$/g)?.map(s=>s.trim()).filter(Boolean)||[paragraphs[0]];
+    paragraphs=[];
+    for(let i=0;i<sentences.length;i+=3) paragraphs.push(sentences.slice(i,i+3).join(" "));
+  }
+  return paragraphs.filter(p=>p.length>20);
+}
+
+async function hydrateRadarRow(row: DbArticle): Promise<DbArticle> {
+  if(row.story_type!=="Radar" || !process.env.NEWSAPI_AI_KEY) return row;
+  const existingSections=normalizeBody(row.body);
+  const currentWords=existingSections.flatMap(section=>section.body).join(" ").split(/\s+/).filter(Boolean).length;
+  if(currentWords>=120) return row;
+
+  const admin=serviceClient();
+  if(!admin) return row;
+  const {data:candidate}=await admin
+    .from("news_candidates")
+    .select("external_id")
+    .eq("provider","newsapi.ai")
+    .eq("article_id",row.id)
+    .maybeSingle();
+  const articleUri=candidate?.external_id;
+  if(!articleUri) return row;
+
+  try{
+    const response=await fetch("https://eventregistry.org/api/v1/article/getArticle",{
+      method:"POST",
+      headers:{"content-type":"application/json"},
+      body:JSON.stringify({
+        action:"getArticle",
+        articleUri,
+        infoArticleBodyLen:-1,
+        resultType:"info",
+        apiKey:process.env.NEWSAPI_AI_KEY,
+      }),
+      cache:"no-store",
+    });
+    if(!response.ok) return row;
+    const payload=await response.json();
+    const entry=payload?.[articleUri]?.info || payload?.article?.info || payload?.info || payload?.[articleUri] || payload?.article || null;
+    const fullBody=entry?.body || entry?.articleBody || null;
+    const paragraphs=newsBodyParagraphs(fullBody);
+    if(paragraphs.join(" ").split(/\s+/).length<120) return row;
+
+    const body=[{eyebrow:"",title:"",body:paragraphs}];
+    const dek=paragraphs[0].split(/\s+/).slice(0,36).join(" ")+(paragraphs[0].split(/\s+/).length>36?"…":"");
+    await admin.from("articles").update({body,dek,meta_description:dek.slice(0,165),updated_at:new Date().toISOString()}).eq("id",row.id);
+    return {...row,body,dek,meta_description:dek.slice(0,165)};
+  }catch{
+    return row;
+  }
+}
+
 export async function getArticleBySlug(slug: string): Promise<PublishedArticle | null> {
   const client = publicClient();
   if (client) {
@@ -171,7 +230,10 @@ export async function getArticleBySlug(slug: string): Promise<PublishedArticle |
       .eq("slug", slug)
       .eq("status", "published")
       .maybeSingle();
-    if (data) return mapDbArticle(data as unknown as DbArticle);
+    if (data) {
+      const hydrated=await hydrateRadarRow(data as unknown as DbArticle);
+      return mapDbArticle(hydrated);
+    }
   }
 
   const prototype = prototypeArticles.find(article => article.slug === slug);

@@ -182,6 +182,9 @@ export async function POST(request:NextRequest){
         articlesSortBy:"date",
         articlesSortByAsc:false,
         articlesArticleBodyLen:-1,
+        includeArticleBody:true,
+        includeArticleAuthors:true,
+        includeArticleLinks:true,
         includeArticleCategories:true,
         includeArticleConcepts:true,
         includeArticleLocation:true,
@@ -210,7 +213,7 @@ export async function POST(request:NextRequest){
       const region=inferRegion(item,feed);
       const commodity=inferCommodity(item);
       const slug=slugify(String(item.title))+"-"+createHash("sha1").update(externalId).digest("hex").slice(0,8);
-      const full=fullArticle(source,item.body);
+      const full=fullArticle(source,item.body||item.content||item.fullContent||item.articleBody||"");
       const excerpt=full.dek;
       const imageUrl=usableImage(item.image);
       const hero=imageUrl||siteUrl+"/api/social/card?slug="+encodeURIComponent(slug)+"&slide=1";

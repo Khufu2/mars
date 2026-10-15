@@ -219,3 +219,39 @@ body{background-image:linear-gradient(rgba(255,255,255,.12),rgba(255,255,255,.12
   .grainxInline{grid-template-columns:1fr;gap:10px;padding:20px}.grainxInline h2{font-size:28px}
   .articleFigure figcaption{align-items:flex-start}.publisherTiny{font-size:8px}.articleHero h1{font-size:48px}
 }
+
+
+/* MARS GAZETTE V2 */
+:root{--paper:#F4F0E6;--white:#FBF9F3;--ink:#171713;--muted:#69675F;--off:#E8E1D3;--line:#1D1E1A;--hairline:#BDB6A8;--orange:#A34F2D;--forest:#28483E;--blue:#375664;--yellow:#D0B978;--mint:#AEBDA7;--rose:#C39A8F}
+body{background:var(--paper);background-image:none;color:var(--ink)}
+.gazetteMasthead{background:var(--paper);border-top:4px solid var(--ink);border-bottom:1px solid var(--ink)}
+.gazetteUtility{max-width:1280px;margin:0 auto;min-height:34px;padding:0 18px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;border-bottom:1px solid var(--hairline);font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.07em}
+.gazetteUtilityLeft,.gazetteUtilityRight{display:flex;gap:16px;align-items:center}.gazetteUtilityRight{justify-content:flex-end}.gazetteUtility a:hover{text-decoration:underline;text-underline-offset:3px}
+.gazetteEdition{font-family:var(--serif);font-style:italic;font-size:10px;letter-spacing:.04em;font-weight:400}
+.gazetteBrand{max-width:1280px;margin:0 auto;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;min-height:104px;padding:10px 18px 4px}
+.gazetteWordmark{font-size:84px;line-height:.8;font-weight:950;letter-spacing:-.09em;text-align:center}
+.gazetteBrandSide{display:flex;flex-direction:column;gap:2px;font-size:9px;font-weight:950;letter-spacing:.08em}.gazetteBrandSide small{font-size:8px;color:var(--muted);font-weight:800}.gazetteBrandSide.right{text-align:right}
+.gazetteDescriptor{text-align:center;font-family:var(--serif);font-size:11px;letter-spacing:.17em;font-weight:700;padding:0 18px 11px;border-bottom:2px solid var(--ink)}
+.gazettePrimaryNav{max-width:1280px;margin:0 auto;min-height:42px;padding:0 18px;display:flex;align-items:center;border-bottom:1px solid var(--ink);gap:18px}
+.gazettePrimaryNav nav{display:flex;gap:26px;align-items:center;flex:1}.gazettePrimaryNav nav a{font-family:var(--serif);font-size:15px;font-weight:700}
+.gazettePrimaryNav nav a:hover,.gazetteTopicNav a:hover{text-decoration:underline;text-underline-offset:4px}
+.gazetteBriefButton{background:var(--ink);color:var(--paper);padding:7px 11px;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.04em}
+.gazetteTopicNav{max-width:1280px;margin:0 auto;min-height:30px;padding:0 18px;display:flex;align-items:center;justify-content:center;gap:22px;overflow:auto;scrollbar-width:none;border-bottom:1px solid var(--hairline)}
+.gazetteTopicNav a{font-size:10px;font-weight:850;white-space:nowrap}.gazetteMenu{display:none}
+
+.gazetteHome{max-width:1280px;margin:0 auto;padding:14px 18px 90px}
+.editionIntro{display:grid;grid-template-columns:auto 1fr minmax(280px,.7fr);align-items:center;gap:16px;padding:8px 0 10px;border-bottom:1px solid var(--hairline)}
+.editionIntro>div:first-child{display:flex;gap:10px;align-items:baseline}.editionIntro strong{font-size:9px;letter-spacing:.1em}.editionIntro span{font-family:var(--serif);font-size:11px;font-style:italic;color:var(--muted)}
+.editionIntro p{margin:0;font-family:var(--serif);font-size:11px;line-height:1.2;text-align:right;color:var(--muted)}.editionRule{height:1px;background:var(--hairline)}
+.marsWire{display:grid;grid-template-columns:92px 1fr;border-bottom:2px solid var(--ink);min-height:48px;align-items:stretch}
+.marsWireLabel{display:flex;align-items:center;background:var(--orange);color:#fff;padding:0 12px;font-size:9px;font-weight:950;letter-spacing:.1em}
+.marsWireItems{display:grid;grid-template-columns:repeat(4,1fr)}.marsWireItems a{padding:9px 12px;border-right:1px solid var(--hairline);font-family:var(--serif);font-size:11px;line-height:1.15}.marsWireItems a:last-child{border-right:0}.marsWireItems b{display:block;font-family:var(--sans);font-size:8px;letter-spacing:.08em;text-transform:uppercase;color:var(--orange);margin-bottom:2px}
+.gazetteFront{display:grid;grid-template-columns:235px minmax(0,1.55fr) 285px;border-bottom:1px solid var(--ink)}
+.gazetteGlance{padding:18px 17px 18px 0;border-right:1px solid var(--hairline)}.gazetteRailTitle{font-family:var(--serif);font-size:27px;letter-spacing:-.035em;border-bottom:1px solid var(--ink);padding-bottom:8px}
+.gazetteGlance article{display:grid;grid-template-columns:26px 1fr;gap:7px;padding:12px 0;border-bottom:1px dotted var(--hairline)}.gazetteGlance article span{font-family:var(--serif);font-style:italic;color:var(--orange);font-size:13px}.gazetteGlance article a{font-family:var(--serif);font-size:14px;font-weight:700;line-height:1.17}
+.gazetteGlance article a:hover,.gazetteLead h1:hover,.gazetteFrontRail h2:hover,.gazetteSubLead h3:hover,.gazetteTextStory h3:hover,.gazettePictureStory h3:hover{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px}
+.gazetteLead{text-align:center;padding:20px 30px 25px;border-right:1px solid var(--hairline)}.gazetteMeta{font-size:8px;font-weight:900;text-transform:uppercase;letter-spacing:.075em;color:var(--forest);margin:0 0 7px}
+.gazetteLead h1{font-family:var(--serif);font-size:clamp(46px,4.25vw,70px);line-height:.94;letter-spacing:-.048em;margin:4px auto 11px;max-width:13ch}.gazetteStandfirst{font-family:var(--serif);font-size:18px;line-height:1.22;max-width:39ch;margin:0 auto 17px;color:#4B4942}
+.gazetteLeadImage{display:block}.gazetteLeadImage img{aspect-ratio:16/9;object-fit:cover;max-height:420px}.gazetteLeadCredit{font-size:8px;color:var(--muted);margin-top:6px;text-align:left}
+.gazetteFrontRail{padding-left:17px}.gazetteFrontRail>div{padding:17px 0;border-bottom:1px dotted var(--hairline)}.gazetteFrontRail>div:last-child{border-bottom:0}.gazetteFrontRail img{aspect-ratio:16/9;object-fit:cover;margin:0 0 9px}
+.gazetteFrontRail h2{font-family:var(--serif);font-size:23px;line-height:1.02;letter-spacing:-.03em;margin:3px 0 8px}.gazetteFrontRail p{font-family:var(--serif);font-size:13px;line-height:1.25;color:#4A4943;margin:0}

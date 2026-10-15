@@ -210,8 +210,8 @@ export async function POST(request:NextRequest){
       const region=inferRegion(item,feed);
       const commodity=inferCommodity(item);
       const slug=slugify(String(item.title))+"-"+createHash("sha1").update(externalId).digest("hex").slice(0,8);
-      const excerpt=limitedExcerpt(item.body,34);
-      const brief=sourceBrief(source,feed,region,publishedAt,excerpt);
+      const full=fullArticle(source,item.body);
+      const excerpt=full.dek;
       const imageUrl=usableImage(item.image);
       const hero=imageUrl||siteUrl+"/api/social/card?slug="+encodeURIComponent(slug)+"&slide=1";
 

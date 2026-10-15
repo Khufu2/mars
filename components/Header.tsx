@@ -1,71 +1,54 @@
 import Link from "next/link";
 
-const nav = [
-  { label: "Africa", href: "/section/africa" },
-  { label: "Business", href: "/section/business" },
-  { label: "Markets", href: "/markets" },
-  { label: "Agriculture", href: "/section/agriculture" },
-  { label: "Commodities", href: "/commodities" },
-  { label: "Trade", href: "/section/trade" },
-  { label: "Logistics", href: "/section/logistics" },
-  { label: "Finance", href: "/section/finance" },
-  { label: "Technology", href: "/section/technology" },
-  { label: "Energy", href: "/section/energy" },
-  { label: "Climate", href: "/section/climate" },
-  { label: "Policy", href: "/section/policy" },
-  { label: "World", href: "/section/world" },
+const primary=[
+  ["Africa","/section/africa"],["Business","/section/business"],["Markets","/markets"],
+  ["World","/section/world"],["Technology","/section/technology"],["Climate","/section/climate"]
 ];
 
-const editions = [
-  { label: "DAR", href: "/region/tanzania" },
-  { label: "EA", href: "/region/east-africa" },
-  { label: "NBO", href: "/region/kenya" },
-  { label: "KLA", href: "/region/uganda" },
-  { label: "WAF", href: "/region/west-africa" },
-  { label: "SAF", href: "/region/southern-africa" },
+const secondary=[
+  ["Agriculture","/section/agriculture"],["Commodities","/commodities"],["Trade","/section/trade"],
+  ["Logistics","/section/logistics"],["Finance","/section/finance"],["Energy","/section/energy"],["Policy","/section/policy"]
 ];
 
-export function Header() {
-  return (
-    <header className="masthead">
-      <div className="mastUtility">
-        <div className="mastUtilityLinks">
-          <Link href="/#brief">Email Briefings</Link>
-          <Link href="/sources">Sources</Link>
-          <Link href="/studio">Newsroom</Link>
-        </div>
-        <div className="editionStrip" aria-label="Regional editions">
-          {editions.map(item => <Link href={item.href} key={item.label}>{item.label}</Link>)}
-        </div>
-        <div className="mastTagline">Intelligence for Africa&apos;s food economy</div>
+export function Header(){
+  return <header className="gazetteMasthead">
+    <div className="gazetteUtility">
+      <div className="gazetteUtilityLeft">
+        <Link href="/briefings">Briefings</Link>
+        <Link href="/sources">Sources</Link>
+        <Link href="/standards">Standards</Link>
       </div>
-
-      <div className="mastBrandRow">
-        <Link className="brandWordmark" href="/" aria-label="MARS home">MARS</Link>
-        <div className="marsOrb" aria-hidden="true"><span /></div>
-        <div className="brandDescriptor">Africa · Business · Markets · Technology · Climate · Trade</div>
+      <div className="gazetteEdition">TODAY&apos;S EDITION · AFRICA / GLOBAL</div>
+      <div className="gazetteUtilityRight">
+        <Link href="/search">Search</Link>
+        <Link href="/studio">Newsroom</Link>
+        <Link href="/advertise">Advertise</Link>
       </div>
+    </div>
 
-      <div className="mastNavRow">
-        <nav className="mastNav" aria-label="Primary">
-          <Link href="/">Home</Link>
-          {nav.map(item => <Link href={item.href} key={item.label}>{item.label}</Link>)}
-        </nav>
-        <div className="mastActions">
+    <div className="gazetteBrand">
+      <div className="gazetteBrandSide"><span>EST. 2026</span><small>DAR ES SALAAM · EAST AFRICA</small></div>
+      <Link href="/" className="gazetteWordmark" aria-label="MARS home">MARS</Link>
+      <div className="gazetteBrandSide right"><span>INDEPENDENT</span><small>MARKETS · POWER · PROGRESS</small></div>
+    </div>
+
+    <div className="gazetteDescriptor">THE AFRICAN GAZETTE OF BUSINESS, MARKETS AND THE WORLD</div>
+
+    <div className="gazettePrimaryNav">
+      <nav>{primary.map(([label,href])=><Link href={href} key={href}>{label}</Link>)}</nav>
+      <Link href="/#brief" className="gazetteBriefButton">Get the briefing</Link>
+      <details className="gazetteMenu">
+        <summary>Menu</summary>
+        <div>
+          {[...primary,...secondary].map(([label,href])=><Link href={href} key={href}>{label}</Link>)}
           <Link href="/search">Search</Link>
-          <Link className="briefCta" href="/#brief">Get the brief</Link>
+          <Link href="/sources">Sources</Link>
         </div>
-        <details className="mobileMenu">
-          <summary aria-label="Open navigation">Menu</summary>
-          <div className="mobilePanel">
-            <Link href="/">Home</Link>
-            {nav.map(item => <Link href={item.href} key={item.label}>{item.label}</Link>)}
-            <Link href="/sources">Sources</Link>
-            <Link href="/search">Search</Link>
-            <Link href="/studio">Newsroom</Link>
-          </div>
-        </details>
-      </div>
-    </header>
-  );
+      </details>
+    </div>
+
+    <nav className="gazetteTopicNav" aria-label="Topics">
+      {secondary.map(([label,href])=><Link href={href} key={href}>{label}</Link>)}
+    </nav>
+  </header>
 }

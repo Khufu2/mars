@@ -74,7 +74,7 @@ function usableImage(value:any){
   return url;
 }
 
-function limitedExcerpt(value:any,maxWords=34){
+function limitedExcerpt(value:any,maxWords=24){
   let text=String(value||"").replace(/\s+/g," ").trim();
   text=text.replace(/^Membership is now required to use this feature\. To learn more:\s*View Membership Benefits\s*/i,"");
   text=text.replace(/^Subscribe(?: now)?(?: to continue reading)?[.\s:-]*/i,"");
@@ -89,9 +89,7 @@ function sourceBrief(source:string,feed:Feed,region:string,publishedAt:string|nu
   return {
     dek,
     body:[
-      {eyebrow:"MARS RADAR",title:"What happened",body:[dek]},
-      {eyebrow:"CONTEXT",title:"Why it is on MARS",body:["This source-linked brief was surfaced in MARS monitoring for "+feed.label.toLowerCase()+" and classified under "+feed.section+" for "+region+"."]},
-      {eyebrow:"SOURCE",title:"Original reporting",body:["The publisher remains the source of record. Use the small publisher link under the hero image for the complete report and full context."]},
+      {eyebrow:"",title:"",body:[dek]}
     ]
   };
 }

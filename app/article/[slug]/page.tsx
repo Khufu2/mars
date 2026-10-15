@@ -16,6 +16,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   return {
     title: article.metaTitle || article.title,
     description: article.metaDescription || article.dek,
+    alternates: article.canonicalUrl ? { canonical: article.canonicalUrl } : undefined,
     openGraph: {
       title: article.metaTitle || article.title,
       description: article.metaDescription || article.dek,
@@ -29,69 +30,72 @@ export default async function ArticlePage({ params }: { params: { slug: string }
   const article = await getArticleBySlug(params.slug);
   if (!article) notFound();
 
+  const isRadar = article.storyType === "Radar";
+  const bodySections = isRadar ? article.sections.slice(0,1) : article.sections;
+
   return (
-    <main className="articlePage">
-      <div className="articleTopline">
-        <Link href={"/section/" + article.section.toLowerCase()}>{article.section}</Link>
-        <span>{article.region}</span>
-        {article.storyType && <span>{article.storyType}</span>}
-      </div>
-      {article.sponsorName && <div className="sponsorDisclosure">{article.sponsorDisclosure || "Sponsored"} · {article.sponsorName}</div>}
-      <header className={"articleHero accent-" + article.accent}>
+    <main className="readerPage">
+      <header className="readerHeader">
+        <div className="readerTopline">
+          <Link href={"/section/" + article.section.toLowerCase()}>{article.section}</Link>
+          <span>{article.region}</span>
+          <span>{article.publishedAt}</span>
+        </div>
+
         <h1>{article.title}</h1>
-        <p>{article.dek}</p>
-        <div className="articleByline">
+        {article.dek && <p className="readerDek">{article.dek}</p>}
+
+        <div className="readerByline">
           <strong>{article.author}</strong>
-          <span>{article.publishedAt} · {article.readTime}</span>
-          {article.isPrototype && <span className="demoBadge">PROTOTYPE STORY</span>}
+          <span>{article.readTime}</span>
+          {article.isPrototype && <span className="demoBadge">DESIGN STORY</span>}
         </div>
       </header>
-      <figure className="articleFigure">
+
+      <figure className="readerHero">
         <img src={article.image} alt="" />
         <figcaption>
           <span>{article.imageCredit}</span>
-          {article.canonicalUrl && <a className="publisherTiny" href={article.canonicalUrl} target="_blank" rel="noreferrer">Open publisher ↗</a>}
+          {article.canonicalUrl && <a href={article.canonicalUrl} target="_blank" rel="noreferrer">Open publisher ↗</a>}
         </figcaption>
       </figure>
-      <div className="articleBodyGrid">
-        <div className="shareRail">
+
+      <div className="readerLayout">
+        <aside className="readerShare" aria-label="Share story">
           <span>SHARE</span>
           <a href={"mailto:?subject=" + encodeURIComponent(article.title)}>Email</a>
           <a href={"https://wa.me/?text=" + encodeURIComponent(article.title)} target="_blank" rel="noreferrer">WhatsApp</a>
-          <a href={"https://www.linkedin.com/sharing/share-offsite/?url=" + encodeURIComponent((process.env.NEXT_PUBLIC_SITE_URL || "https://mars-rust.vercel.app") + "/article/" + article.slug)} target="_blank" rel="noreferrer">LinkedIn</a>
           <a href={"https://x.com/intent/post?text=" + encodeURIComponent(article.title + " " + (process.env.NEXT_PUBLIC_SITE_URL || "https://mars-rust.vercel.app") + "/article/" + article.slug)} target="_blank" rel="noreferrer">X</a>
-        </div>
-        <article className="articleBody">
-          {article.sections.map(section => (
-            <section className="articleBlock" key={section.eyebrow + section.title}>
-              <div className="blockEyebrow">{section.eyebrow}</div>
-              <h2>{section.title}</h2>
-              {section.body.map(p => <p key={p}>{p}</p>)}
+        </aside>
+
+        <article className="readerBody">
+          {bodySections.map((section, sectionIndex) => (
+            <section className="readerSection" key={section.eyebrow + section.title + sectionIndex}>
+              {!isRadar && section.eyebrow && <div className="readerEyebrow">{section.eyebrow}</div>}
+              {!isRadar && section.title && <h2>{section.title}</h2>}
+              {section.body.map((paragraph, index) => <p key={index}>{paragraph}</p>)}
             </section>
           ))}
-          {article.corrections?.length ? <section className="correctionsBox">
-            <strong>Corrections & updates</strong>
-            {article.corrections.map((correction,index)=><div key={index}><span>{correction.publishedAt || "Update"}</span><p>{correction.note}</p></div>)}
-          </section> : null}
-          <div className="sourceBox">
-            <strong>{article.sources?.length ? "Sources & evidence" : "Evidence standard"}</strong>
-            {article.sources?.length ? (
-              <div className="articleSources">
-                {article.sources.map((source,index)=><a key={source.url+index} href={source.url} target="_blank" rel="noreferrer">
-                  <span>{source.verified ? "Verified" : "Source"}</span>
-                  <strong>{source.name}</strong>
-                  {source.note && <small>{source.note}</small>}
-                </a>)}
-              </div>
-            ) : <p>{article.isPrototype ? "This is prototype content. Production stories expose source links and verification notes here." : "MARS exposes material sources and corrections when available."}</p>}
-          </div>
+
+          {!isRadar && article.corrections?.length ? (
+            <section className="readerCorrections">
+              <strong>Corrections & updates</strong>
+              {article.corrections.map((correction,index)=><div key={index}><span>{correction.publishedAt || "Update"}</span><p>{correction.note}</p></div>)}
+            </section>
+          ) : null}
+
+          {!isRadar && article.sources?.length ? (
+            <section className="readerSources">
+              <span>Sources</span>
+              {article.sources.map((source,index)=><a key={source.url+index} href={source.url} target="_blank" rel="noreferrer">{source.name} ↗</a>)}
+            </section>
+          ) : null}
         </article>
-        <aside className="articleAside">
-          <div className="asideCard">
-            <span className="miniLabel">GRAIN X</span>
-            <h3>See a commercial opportunity?</h3>
-            <p>Move from intelligence to buyers, suppliers and trade workflows.</p>
-            <a href="https://grainx.xyz" target="_blank" rel="noreferrer">Open Grain X ↗</a>
+
+        <aside className="readerSide">
+          <div>
+            <span className="miniLabel">MARS</span>
+            <strong>Africa, markets and the forces reshaping the world.</strong>
           </div>
         </aside>
       </div>

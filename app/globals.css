@@ -291,3 +291,31 @@ body{background:var(--paper);background-image:none;color:var(--ink)}
 .articleByline{border-top:0;border-bottom:1px solid var(--hairline);padding:9px 0}.articleFigure{max-width:1040px;margin:18px 0 0}.articleFigure img{max-height:680px}.publisherTiny{font-size:8px}
 .articleBodyGrid{grid-template-columns:92px minmax(0,700px) 250px;gap:32px;justify-content:start;margin-left:70px}.articleBlock p{font-size:20px;line-height:1.58}.articleBlock h2{font-size:37px}
 .footer{background:var(--ink);color:var(--paper);border-top:4px solid var(--orange)}.footerNote{color:#C8C1B5}.footer a:hover{text-decoration:underline}
+
+
+@media(max-width:1080px){
+  .gazetteUtility{grid-template-columns:1fr 1fr}.gazetteEdition{display:none}.gazetteBrand{grid-template-columns:1fr auto}.gazetteBrandSide.right{display:none}
+  .gazettePrimaryNav nav{gap:18px}.gazetteTopicNav{justify-content:flex-start}
+  .gazetteFront{grid-template-columns:210px 1fr}.gazetteFrontRail{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,1fr);padding:0;border-top:1px solid var(--hairline)}.gazetteFrontRail>div{padding:16px;border-right:1px solid var(--hairline)}
+  .gazetteSubLead{grid-template-columns:repeat(2,1fr)}
+  .gazetteDeskGrid{grid-template-columns:1.3fr 1fr}.gazetteDeskLast{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;padding-left:0;border-top:1px solid var(--hairline)}.gazetteDeskLast .gazettePictureStory{padding:15px}.gazetteDeskLast .gazettePictureStory:first-child{border-right:1px solid var(--hairline)}
+  .gazetteCardGrid{grid-template-columns:repeat(2,1fr)}.gazetteCardGrid .gazettePictureStory:first-child{grid-column:span 2}
+  .articleBodyGrid{margin-left:0}
+}
+@media(max-width:720px){
+  .gazetteUtility{grid-template-columns:1fr auto;padding:0 12px}.gazetteUtilityLeft a:nth-child(n+2){display:none}.gazetteUtilityRight a:not(:first-child){display:none}
+  .gazetteBrand{min-height:78px;padding:9px 12px;display:block;text-align:center}.gazetteWordmark{font-size:62px}.gazetteBrandSide{display:none}.gazetteDescriptor{font-size:8px;letter-spacing:.12em}
+  .gazettePrimaryNav{padding:0 12px}.gazettePrimaryNav nav{overflow:auto;gap:17px;scrollbar-width:none}.gazettePrimaryNav nav a{font-size:13px}.gazetteBriefButton{display:none}.gazetteTopicNav{padding:0 12px;gap:17px}
+  .gazetteHome{padding:8px 12px 60px}.editionIntro{grid-template-columns:1fr}.editionRule,.editionIntro p{display:none}.marsWire{grid-template-columns:70px 1fr}.marsWireItems{display:flex;overflow:auto}.marsWireItems a{min-width:230px}.marsWireLabel{padding:0 8px}
+  .gazetteFront{display:block}.gazetteGlance{border-right:0;border-bottom:1px solid var(--hairline);padding-right:0}.gazetteGlance article:nth-child(n+4){display:none}.gazetteRailTitle{font-size:23px}
+  .gazetteLead{padding:18px 0;border-right:0}.gazetteLead h1{font-size:44px}.gazetteStandfirst{font-size:17px}.gazetteFrontRail{display:block}.gazetteFrontRail>div{padding:14px 0;border-right:0}
+  .gazetteSubLead{grid-template-columns:1fr}.gazetteSubLeadItem,.gazetteSubLeadItem:first-child,.gazetteSubLeadItem:last-child{padding:14px 0;border-right:0;border-bottom:1px dotted var(--hairline)}
+  .gazetteBriefing{grid-template-columns:1fr;padding:22px 18px}.gazetteBriefingMark{display:none}.gazetteBriefing h2{font-size:31px}
+  .gazetteDesk{margin-top:38px}.gazetteDeskHead>a,.gazetteDeskHead>span{font-size:34px}.gazetteDeskHead>span+span,.gazetteDeskHead small{display:none}.gazetteDeskGrid,.gazetteDarkGrid{display:block}
+  .gazetteDeskLead{padding:14px 0;border-right:0}.gazetteDeskColumns{display:block;border-right:0}.gazetteDeskColumns .gazetteTextStory{padding:14px 0!important;border-right:0!important;border-bottom:1px dotted var(--hairline)}
+  .gazetteDeskLast{display:block}.gazetteDeskLast .gazettePictureStory{padding:14px 0!important;border-right:0!important}
+  .gazetteCardGrid{grid-template-columns:1fr}.gazetteCardGrid .gazettePictureStory,.gazetteCardGrid .gazettePictureStory:first-child{grid-column:auto;grid-row:auto;padding:14px 0;border-right:0;border-bottom:1px dotted var(--hairline)}
+  .gazetteDarkDesk{margin-left:-12px;margin-right:-12px;padding:0 12px 20px}.gazetteAdSlot{grid-template-columns:1fr;gap:5px}.grainxGazette{grid-template-columns:1fr;gap:10px}
+  .gazetteArchiveGrid{grid-template-columns:1fr}.gazetteArchiveGrid .gazetteTextStory{padding:13px 0;border-right:0}
+  .articlePage{padding-left:12px;padding-right:12px}.articleHero h1{font-size:46px}.articleHero>p{font-size:19px}.articleBodyGrid{display:block}.articleBlock p{font-size:19px}
+}

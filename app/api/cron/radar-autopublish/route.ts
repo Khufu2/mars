@@ -74,7 +74,7 @@ function usableImage(value:any){
   return url;
 }
 
-function limitedExcerpt(value:any,maxWords=24){
+function limitedExcerpt(value:any,maxWords=36){
   let text=String(value||"").replace(/\s+/g," ").trim();
   text=text.replace(/^Membership is now required to use this feature\. To learn more:\s*View Membership Benefits\s*/i,"");
   text=text.replace(/^Subscribe(?: now)?(?: to continue reading)?[.\s:-]*/i,"");
@@ -83,15 +83,61 @@ function limitedExcerpt(value:any,maxWords=24){
   return words.length<=maxWords?text:words.slice(0,maxWords).join(" ")+"…";
 }
 
-function sourceBrief(source:string,feed:Feed,region:string,publishedAt:string|null,excerpt:string){
-  const when=publishedAt?new Intl.DateTimeFormat("en",{dateStyle:"medium"}).format(new Date(publishedAt)):"recently";
-  const dek=excerpt || "MARS surfaced this "+feed.label.toLowerCase()+" development from "+source+" "+when+".";
+function cleanArticleBody(value:any){
+  let text=String(value||"").replace(/\r/g,"").trim();
+  text=text.replace(/^Membership is now required to use this feature\. To learn more:\s*View Membership Benefits\s*/i,"");
+  text=text.replace(/^Subscribe(?: now)?(?: to continue reading)?[.\s:-]*/i,"");
+  text=text.replace(/\n{3,}/g,"\n\n");
+  return text.trim();
+}
+
+function articleParagraphs(value:any){
+  const text=cleanArticleBody(value);
+  if(!text) return [];
+  let paragraphs=text.split(/\n\s*\n+/).map(p=>p.replace(/\s+/g," ").trim()).filter(Boolean);
+  if(paragraphs.length===1 && paragraphs[0].length>900){
+    const sentences=paragraphs[0].match(/[^.!?]+[.!?]+(?:["')\]]+)?|[^.!?]+$/g)?.map(s=>s.trim()).filter(Boolean)||[paragraphs[0]];
+    paragraphs=[];
+    for(let i=0;i<sentences.length;i+=3) paragraphs.push(sentences.slice(i,i+3).join(" "));
+  }
+  return paragraphs.filter(p=>p.length>20);
+}
+
+function fullArticle(source:string,value:any){
+  const paragraphs=articleParagraphs(value);
+  const excerpt=limitedExcerpt(paragraphs[0]||value,36);
   return {
-    dek,
-    body:[
-      {eyebrow:"",title:"",body:[dek]}
-    ]
+    dek:excerpt || "Latest reporting from "+source+".",
+    body:[{eyebrow:"",title:"",body:paragraphs.length?paragraphs:[excerpt].filter(Boolean)}]
   };
+}
+
+async function hydrateExistingArticles(client:any,items:any[]){
+  const ids=items.map(item=>item?.candidate?.external_id).filter(Boolean);
+  if(!ids.length) return 0;
+  const {data:existing}=await client
+    .from("news_candidates")
+    .select("external_id,article_id")
+    .eq("provider","newsapi.ai")
+    .in("external_id",ids);
+  const articleByExternal=new Map((existing||[]).filter((row:any)=>row.article_id).map((row:any)=>[row.external_id,row.article_id]));
+  const updates=items
+    .map(item=>({article_id:articleByExternal.get(item.candidate.external_id),body:item.article.body,dek:item.article.dek,meta_description:item.article.meta_description}))
+    .filter(row=>row.article_id && Array.isArray(row.body?.[0]?.body) && row.body[0].body.join(" ").length>250);
+  let updated=0;
+  for(let i=0;i<updates.length;i+=10){
+    const batch=updates.slice(i,i+10);
+    const results=await Promise.all(batch.map(row=>
+      client.from("articles").update({
+        body:row.body,
+        dek:row.dek,
+        meta_description:row.meta_description,
+        updated_at:new Date().toISOString()
+      }).eq("id",row.article_id)
+    ));
+    updated+=results.filter((result:any)=>!result.error).length;
+  }
+  return updated;
 }
 
 async function ensureRadarAuthor(client:any){
@@ -135,7 +181,7 @@ export async function POST(request:NextRequest){
         articlesCount:100,
         articlesSortBy:"date",
         articlesSortByAsc:false,
-        articlesArticleBodyLen:650,
+        articlesArticleBodyLen:-1,
         includeArticleCategories:true,
         includeArticleConcepts:true,
         includeArticleLocation:true,
@@ -180,14 +226,15 @@ export async function POST(request:NextRequest){
           region,desk:feed.section,commodity,
         },
         article:{
-          slug,title:String(item.title).slice(0,1000),dek:brief.dek,body:brief.body,
+          slug,title:String(item.title).slice(0,1000),dek:full.dek,body:full.body,
           section:feed.section,region,country:region==="Global"?"Global":"Regional",commodity,
           featured_image_url:hero,image_credit:imageUrl?"Image via "+source:"MARS Radar",
-          meta_title:String(item.title).slice(0,65),meta_description:brief.dek.slice(0,165),
+          meta_title:String(item.title).slice(0,65),meta_description:full.dek.slice(0,165),
         }
       };
     });
 
+    const hydrated=await hydrateExistingArticles(client,items);
     const {data:ingest,error:ingestError}=await client.rpc("ingest_mars_radar_batch",{p_items:items,p_author_id:authorId});
     if(ingestError) throw ingestError;
 
@@ -199,7 +246,7 @@ export async function POST(request:NextRequest){
       status:"completed",items_fetched:results.length,items_upserted:published,finished_at:new Date().toISOString()
     }).eq("id",run.id);
 
-    return NextResponse.json({ok:true,feed:feed.key,page,label:feed.label,fetched:results.length,published,duplicates,failed,searchesUsed:1});
+    return NextResponse.json({ok:true,feed:feed.key,page,label:feed.label,fetched:results.length,published,hydrated,duplicates,failed,searchesUsed:1});
   }catch(error){
     const message=error instanceof Error?error.message:"Radar sync failed";
     await client.from("ingestion_runs").update({status:"failed",error:message,finished_at:new Date().toISOString()}).eq("id",run.id);

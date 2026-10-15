@@ -1,54 +1,55 @@
 import Link from "next/link";
 
 const primary=[
-  ["Africa","/section/africa"],["Business","/section/business"],["Markets","/markets"],
-  ["World","/section/world"],["Technology","/section/technology"],["Climate","/section/climate"]
+  ["Africa","/section/africa"],
+  ["Business","/section/business"],
+  ["Markets","/markets"],
+  ["Agriculture","/section/agriculture"],
+  ["Technology","/section/technology"],
+  ["Climate","/section/climate"],
+  ["World","/section/world"],
 ];
 
 const secondary=[
-  ["Agriculture","/section/agriculture"],["Commodities","/commodities"],["Trade","/section/trade"],
-  ["Logistics","/section/logistics"],["Finance","/section/finance"],["Energy","/section/energy"],["Policy","/section/policy"]
+  ["Trade","/section/trade"],
+  ["Logistics","/section/logistics"],
+  ["Finance","/section/finance"],
+  ["Energy","/section/energy"],
+  ["Commodities","/commodities"],
+  ["Policy","/section/policy"],
 ];
 
 export function Header(){
-  return <header className="gazetteMasthead">
-    <div className="gazetteUtility">
-      <div className="gazetteUtilityLeft">
+  return <header className="mars3Header">
+    <div className="mars3Utility">
+      <div className="mars3UtilityLeft">DAR ES SALAAM · AFRICA / GLOBAL</div>
+      <div className="mars3UtilityRight">
         <Link href="/briefings">Briefings</Link>
         <Link href="/sources">Sources</Link>
         <Link href="/standards">Standards</Link>
-      </div>
-      <div className="gazetteEdition">TODAY&apos;S EDITION · AFRICA / GLOBAL</div>
-      <div className="gazetteUtilityRight">
-        <Link href="/search">Search</Link>
-        <Link href="/studio">Newsroom</Link>
         <Link href="/advertise">Advertise</Link>
       </div>
     </div>
 
-    <div className="gazetteBrand">
-      <div className="gazetteBrandSide"><span>EST. 2026</span><small>DAR ES SALAAM · EAST AFRICA</small></div>
-      <Link href="/" className="gazetteWordmark" aria-label="MARS home">MARS</Link>
-      <div className="gazetteBrandSide right"><span>INDEPENDENT</span><small>MARKETS · POWER · PROGRESS</small></div>
+    <div className="mars3Mast">
+      <Link href="/" className="mars3Logo" aria-label="MARS home">MARS</Link>
+      <div className="mars3Identity">
+        <strong>Independent African newsroom</strong>
+        <span>Business · markets · power · progress</span>
+      </div>
+      <div className="mars3Actions">
+        <Link href="/search">Search</Link>
+        <Link href="/#brief" className="mars3BriefCta">Get the briefing</Link>
+      </div>
     </div>
 
-    <div className="gazetteDescriptor">THE AFRICAN GAZETTE OF BUSINESS, MARKETS AND THE WORLD</div>
-
-    <div className="gazettePrimaryNav">
-      <nav>{primary.map(([label,href])=><Link href={href} key={href}>{label}</Link>)}</nav>
-      <Link href="/#brief" className="gazetteBriefButton">Get the briefing</Link>
-      <details className="gazetteMenu">
-        <summary>Menu</summary>
-        <div>
-          {[...primary,...secondary].map(([label,href])=><Link href={href} key={href}>{label}</Link>)}
-          <Link href="/search">Search</Link>
-          <Link href="/sources">Sources</Link>
-        </div>
-      </details>
+    <div className="mars3NavShell">
+      <nav className="mars3PrimaryNav" aria-label="Primary">
+        {primary.map(([label,href])=><Link href={href} key={href}>{label}</Link>)}
+      </nav>
+      <nav className="mars3SecondaryNav" aria-label="More sections">
+        {secondary.map(([label,href])=><Link href={href} key={href}>{label}</Link>)}
+      </nav>
     </div>
-
-    <nav className="gazetteTopicNav" aria-label="Topics">
-      {secondary.map(([label,href])=><Link href={href} key={href}>{label}</Link>)}
-    </nav>
-  </header>
+  </header>;
 }

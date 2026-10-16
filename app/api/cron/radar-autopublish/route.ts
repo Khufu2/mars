@@ -71,6 +71,8 @@ function usableImage(value:any){
   if(!url) return null;
   if(/(?:\/|\b)(?:rt|pixel|tracking)\.gif(?:\?|$)/i.test(url)) return null;
   if(/\.gif(?:\?|$)/i.test(url)) return null;
+  if(/(?:logo|icon|avatar|sprite|placeholder)(?:[-_.\/]|$)/i.test(url)) return null;
+  if(/\/structure\/.*logo/i.test(url)) return null;
   return url;
 }
 
@@ -157,10 +159,12 @@ export async function POST(request:NextRequest){
 
   const body=await request.json().catch(()=>({}));
   const now=new Date();
-  const rotationIndex=(Math.floor(now.getTime()/86400000)*2+(now.getUTCHours()>=12?1:0))%feeds.length;
+  const rotationSlot=Math.floor(now.getTime()/3600000);
+  const rotationIndex=rotationSlot%feeds.length;
+  const defaultPage=(Math.floor(rotationSlot/feeds.length)%5)+1;
   const requested=String(body.feed||feeds[rotationIndex].key);
   const feed=feeds.find(item=>item.key===requested) || feeds[rotationIndex];
-  const page=Math.min(5,Math.max(1,Number(body.page||1)));
+  const page=Math.min(5,Math.max(1,Number(body.page||defaultPage)));
   const query=buildQuery(feed);
   const startedAt=new Date().toISOString();
 

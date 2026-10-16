@@ -159,7 +159,7 @@ export async function POST(request:NextRequest){
 
   const body=await request.json().catch(()=>({}));
   const now=new Date();
-  const rotationSlot=Math.floor(now.getTime()/3600000);
+  const rotationSlot=Math.floor(now.getTime()/300000);
   const rotationIndex=rotationSlot%feeds.length;
   const defaultPage=(Math.floor(rotationSlot/feeds.length)%5)+1;
   const requested=String(body.feed||feeds[rotationIndex].key);

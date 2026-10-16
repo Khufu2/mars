@@ -6,6 +6,11 @@ export const revalidate=60;
 
 function href(story:PublishedArticle){ return "/article/"+story.slug; }
 
+function frontPageEligible(story:PublishedArticle){
+  const text=story.title.toLowerCase();
+  return !/(sports news|football|soccer|premier league|champions league|manchester united|arsenal|chelsea|liverpool|celebrity|actor|actress|movie|film review|reality show|wedding)/i.test(text);
+}
+
 function score(story:PublishedArticle,index:number){
   let s=Math.max(0,40-index*.2);
   const weights:Record<string,number>={Africa:38,Business:34,Markets:33,Finance:31,Agriculture:30,Trade:28,Technology:26,Energy:24,Climate:24,Logistics:22,Policy:20,Commodities:18,Companies:18,World:12};
@@ -14,6 +19,7 @@ function score(story:PublishedArticle,index:number){
   if(/africa|tanzania|kenya|uganda|rwanda|ethiopia|nigeria|south africa|zambia|ghana/.test(text)) s+=22;
   if(/market|econom|bank|currency|inflation|trade|export|import|company|investment|agricultur|food|energy|technology|climate|port|shipping|logistics/.test(text)) s+=10;
   if(story.image && !story.image.includes("/api/social/card")) s+=8;
+  if(/logo|icon|avatar|sprite|placeholder|structure\/.*logo/i.test(story.image||"")) s-=45;
   if(story.dek && story.dek.length>80) s+=4;
   if(/celebrity|actor|actress|movie|film|wedding|funeral|football|soccer|murder|execution|immoral acts|mosque/.test(story.title.toLowerCase())) s-=100;
   return s;
@@ -69,6 +75,7 @@ export default async function Home(){
   const live=fetched.filter(story=>!story.isPrototype);
   const chronological=live.length?live:fetched;
   const ranked=chronological
+    .filter(frontPageEligible)
     .map((story,index)=>({story,score:score(story,index)}))
     .sort((a,b)=>b.score-a.score)
     .map(item=>item.story);
@@ -122,7 +129,7 @@ export default async function Home(){
         <Meta story={lead}/>
         <Link href={href(lead)}><h1>{lead.title}</h1></Link>
         {lead.dek && <p>{lead.dek}</p>}
-        <div className="mars3Byline">{lead.author}</div>
+        {lead.author && lead.author!=="MARS Radar" && <div className="mars3Byline">{lead.author}</div>}
       </article>
 
       <aside className="mars3FrontRail">

@@ -4,7 +4,8 @@ import type { Metadata } from "next";
 import { articles as prototypeArticles } from "@/lib/data";
 import { getArticleBySlug, getPublishedArticles } from "@/lib/content";
 
-export const revalidate=60;
+export const dynamic="force-dynamic";
+export const revalidate=0;
 
 export function generateStaticParams(){
   return prototypeArticles.map(article=>({slug:article.slug}));
